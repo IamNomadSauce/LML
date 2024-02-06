@@ -1,10 +1,10 @@
 import numpy as np
-import nnfs
-from nnfs.datasets import spiral_data
-
+# import nnfs
+# from nnfs.datasets import spiral_data
+import math
 import mysql.connector
 
-nnfs.init()
+# nnfs.init()
 
 
 # Dense layer
@@ -513,6 +513,7 @@ class Loss_CategoricalCrossentropy(Loss):
 
         # Probabilities for target values -
         # only if categorical labels
+        y_true = np.array(y_true)
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[
                 range(samples),
@@ -927,18 +928,55 @@ def load_dataset():
 
     cursor = connection.cursor()
 
-    candles = "SELECT * FROM coinbase_BTCUSD_1 ORDER BY time"
+    candles_query = "SELECT * FROM coinbase_BTCUSD_1 ORDER BY time"
     trends_query = "SELECT * FROM coinbase_BTCUSD_1_trendlines"
 
+    cursor.execute(candles_query)
+    candles = cursor.fetchall()
     cursor.execute(trends_query)
-
     trends = cursor.fetchall()
 
-    print("TRENDS LENGTH", len(trends))
-
     cursor.close()
-
     connection.close()
+
+    print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)}" )
+
+
+    # Filter out unnecessary data, using only end_points in the trends array
+    trend_endpoints = []
+
+    for trend in trends:
+        result = 0 if trend[10] == 'down' else 1
+        temp = [trend[6], trend[5], trend[7], result] # [end_time, end_point, end_invalidation, trend_state: up/down]
+        trend_endpoints.append(temp)
+        
+    
+    # Split the data into 90:10 training and validation
+    trends_training = trend_endpoints[:math.floor(len(trends) * 0.9)]
+    trends_test = trend_endpoints[:math.floor(len(trends) * 0.1)]
+
+    print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
+
+    print("LAST TREND \n", trends_training[-1])
+
+    # Find the index of the candles array that matches the trends_training[-1][0]
+    candle_index = next((index for index, candle in enumerate(candles) if candle[0] == trends_training[-1][0]), None)
+    
+    print(f"Matching Index: {candle_index} \n {candles[candle_index]} \n")
+
+    # Create test data with the candles[:candle_index]
+
+    X = candles[:candle_index]
+    y = trends_training
+
+    X_test = candles[candle_index:]
+    y_test = trends_test
+
+    # print(f"TRAINING DATA \n {len(X)}")
+    
+    return X, y, X_test, y_test
+    
+    
 
 
 # X, y = spiral_data(samples=1000, classes=3)
@@ -951,27 +989,27 @@ def load_dataset():
 
 
 # Load dataset
-load_dataset()
+X, y, X_test, y_test = load_dataset()
 
-# # Instantiate the model
-# model = Model()
+# Instantiate the model
+model = Model()
 
-# # Add layers
-# model.add(Layer_Dense(5, 5, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4))
-# model.add(Activation_ReLU())
-# model.add(Layer_Dropout(0.1))
-# model.add(Layer_Dense(5, 2))
-# model.add(Activation_Softmax())
+# Add layers
+model.add(Layer_Dense(6, 6, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4))
+model.add(Activation_ReLU())
+model.add(Layer_Dropout(0.1))
+model.add(Layer_Dense(6, 5))
+model.add(Activation_Softmax())
 
-# # Set loss, optimizer and accuracy objects
-# model.set(
-#     loss=Loss_CategoricalCrossentropy(),
-#     optimizer=Optimizer_Adam(learning_rate=0.05, decay=5e-5),
-#     accuracy=Accuracy_Categorical()
-# )
+# Set loss, optimizer and accuracy objects
+model.set(
+    loss=Loss_CategoricalCrossentropy(),
+    optimizer=Optimizer_Adam(learning_rate=0.05, decay=5e-5),
+    accuracy=Accuracy_Categorical()
+)
 
-# # Finalize the model
-# model.finalize()
+# Finalize the model
+model.finalize()
 
-# # Train the model
-# model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
+# Train the model
+model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
