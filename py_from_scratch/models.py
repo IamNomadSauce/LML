@@ -1,10 +1,10 @@
 import numpy as np
-import nnfs
-from nnfs.datasets import spiral_data
 import math
 import mysql.connector
 
-nnfs.init()
+# import nnfs
+# from nnfs.datasets import spiral_data
+# nnfs.init()
 
 
 # Dense layer
@@ -504,6 +504,7 @@ class Loss_CategoricalCrossentropy(Loss):
     # Forward pass
     def forward(self, y_pred, y_true):
 
+        # print('FORWARD', y_pred, y_true)
         # Number of samples in a batch
         samples = len(y_pred)
 
@@ -514,7 +515,10 @@ class Loss_CategoricalCrossentropy(Loss):
         # Probabilities for target values -
         # only if categorical labels
         y_true = np.array(y_true)
-        print("SHAPE", y_true.shape, y_pred_clipped.shape)
+        y_true = y_true.reshape(-1, 1)
+
+        # print(f"SHAPE \n Y_True {y_true.shape} \n Y_Pred {y_pred_clipped.shape} \n")
+        # print(f"y_true {y_true}  \n y_pred {y_pred_clipped} \n")
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[
                 range(samples),
@@ -529,6 +533,7 @@ class Loss_CategoricalCrossentropy(Loss):
             )
 
         # Losses
+        # print(f"Correct Confidences", correct_confidences)
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
 
@@ -558,9 +563,12 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
     # Backward pass
     def backward(self, dvalues, y_true):
 
+        # print("ASLCC \n", dvalues, y_true)
+
         # Number of samples
         samples = len(dvalues)
-
+        y_true = np.array(y_true)
+        y_true = y_true.reshape(-1, 1)
         # If labels are one-hot encoded,
         # turn them into discrete values
         if len(y_true.shape) == 2:
@@ -569,6 +577,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         # Copy so we can safely modify
         self.dinputs = dvalues.copy()
         # Calculate gradient
+        
         self.dinputs[range(samples), y_true] -= 1
         # Normalize gradient
         self.dinputs = self.dinputs / samples
@@ -792,15 +801,16 @@ class Model:
         # create an object of combined activation
         # and loss function containing
         # faster gradient calculation
-        if isinstance(self.layers[-1], Activation_Softmax) and \
-           isinstance(self.loss, Loss_CategoricalCrossentropy):
+        if isinstance(self.layers[-1], Activation_Softmax) and isinstance(self.loss, Loss_CategoricalCrossentropy):
             # Create an object of combined activation
             # and loss functions
-            self.softmax_classifier_output = \
-                Activation_Softmax_Loss_CategoricalCrossentropy()
+            # print("CHECK HERE \n")
+            self.softmax_classifier_output = Activation_Softmax_Loss_CategoricalCrossentropy()
 
     # Train the model
     def train(self, X, y, *, epochs=1, print_every=1, validation_data=None):
+
+        print("TRAIN MODEL", X, y)
 
         # Initialize accuracy object
         self.accuracy.init(y)
@@ -813,14 +823,11 @@ class Model:
 
 
             # Calculate loss
-            data_loss, regularization_loss = \
-                self.loss.calculate(output, y,
-                                    include_regularization=True)
+            data_loss, regularization_loss =  self.loss.calculate(output, y, include_regularization=True)
             loss = data_loss + regularization_loss
 
             # Get predictions and calculate an accuracy
-            predictions = self.output_layer_activation.predictions(
-                              output)
+            predictions = self.output_layer_activation.predictions(output)
             accuracy = self.accuracy.calculate(predictions, y)
 
             # Perform backward pass
@@ -921,7 +928,7 @@ class Model:
 def make_trendlines(candles):
 
     trendlines = []
-    ts = 0
+    ts = 1
     trend_state = []
 
     for index, candle in enumerate(candles):
@@ -931,10 +938,10 @@ def make_trendlines(candles):
                 "Time": candles[0][0],
                 "Point": candles[0][2],
                 "Inv": candles[0][3],
-                "Direction": 0 if candles[0][2] < candles[0][3] else 1,
+                "Direction": -1 if candles[0][2] < candles[0][3] else 1,
             }
             trendlines.append(current)
-            trend_state.append(0 if candles[0][2] < candles[0][3] else 1)
+            trend_state.append(-1 if candles[0][2] < candles[0][3] else 1)
             pass
         else:
             # Higher High in uptrend  (continuation)
@@ -986,6 +993,7 @@ def make_trendlines(candles):
             #     current["StartTime"] -= 1
             trendlines.append(current)
             # print("CANDLE LENGTH", len(current))
+            # print("TREND", ts)
             trend_state.append(ts)
             
         # print("Trendline", current, "\n")
@@ -1013,9 +1021,12 @@ def load_dataset():
     # trends = cursor.fetchall()
     trends = make_trendlines(candles)
 
+    # print(f"TRENDS {trends}")
+
+
     cursor.close()
     connection.close()
-    print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)} \n" )
+    # print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)} \n" )
     
     # Split the data into 90:10 training and validation
     candles_training = candles[:math.floor(len(candles) * 0.9)]
@@ -1025,7 +1036,7 @@ def load_dataset():
     trends_test = trends[:math.floor(len(trends) * 0.1)]
 
 
-    print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
+    # print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
 
     # Create test data with the candles[:candle_index]
 
@@ -1042,20 +1053,23 @@ def load_dataset():
     
 
 
-X, y = spiral_data(samples=1000, classes=3)
-print("SPIRAL SHAPE", X, "\n", y, "\n")
+# X, y = spiral_data(samples=1000, classes=3)
+# print(f"SPIRAL SHAPE \n X: {X} \n y {y} \n")
 
-X = np.array(X)
-y = np.array(y)
+# # X = np.array(X)
+# # y = np.array(y)
 
-print("SPIRAL SHAPE", X.shape, "\n", y.shape, "\n")
-X_test, y_test = spiral_data(samples=100, classes=3)
+# # print("SPIRAL SHAPE", X.shape, "\n", y.shape, "\n")
+# X_test, y_test = spiral_data(samples=100, classes=3)
+# print(f"SPIRAL Test SHAPE \n X: {X_test} \n y {y_test} \n")
+
 
 # Create dataset
 # X = [[t, o, h, l, c], [...], ...] (input values)
 # y = [[t,p], [...], ...] (output values)
 # y_2 = [[ts_t,t_s, tf_t, t_f, ts_inv, tf_inv ], [...], ...] (output values)
 
+print("-----------------------------------------------------------------")
 
 # Load dataset
 X, y, X_test, y_test = load_dataset()
@@ -1064,15 +1078,18 @@ X = np.array(X)
 y = np.array(y)
 X_test = np.array(X_test)
 y_test = np.array(y_test)
-# print("TEST SHAPE", X, "\n", y, "\n")
-print(f"Training SHAPE \n X_Training {X.shape} \n Y_Training {y.shape} \n")
-print("Test SHAPE \n", X_test.shape, "\n", y_test.shape, "\n")
+print(f"Trends DATA \n X: {X} \n y {y} \n")
+print(f"Trends SHAPE \n X_Training {X.shape} \n Y_Training {y.shape} \n")
+print(f"Trends Test SHAPE \n X: {X_test} \n y {y_test} \n")
+
+print("-----------------------------------------------------------------")
+
 
 # Instantiate the model
 model = Model()
 
 # Add layers
-model.add(Layer_Dense(6, 6, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4))
+model.add(Layer_Dense(6, 6, weight_regularizer_l2=5e-4, bias_regularizer_l2=3e-4))
 model.add(Activation_ReLU())
 model.add(Layer_Dropout(0.1))
 model.add(Layer_Dense(6, 1))
