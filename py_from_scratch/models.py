@@ -1,10 +1,10 @@
 import numpy as np
-# import nnfs
-# from nnfs.datasets import spiral_data
+import nnfs
+from nnfs.datasets import spiral_data
 import math
 import mysql.connector
 
-# nnfs.init()
+nnfs.init()
 
 
 # Dense layer
@@ -514,6 +514,7 @@ class Loss_CategoricalCrossentropy(Loss):
         # Probabilities for target values -
         # only if categorical labels
         y_true = np.array(y_true)
+        print("SHAPE", y_true.shape, y_pred_clipped.shape)
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[
                 range(samples),
@@ -799,8 +800,7 @@ class Model:
                 Activation_Softmax_Loss_CategoricalCrossentropy()
 
     # Train the model
-    def train(self, X, y, *, epochs=1, print_every=1,
-              validation_data=None):
+    def train(self, X, y, *, epochs=1, print_every=1, validation_data=None):
 
         # Initialize accuracy object
         self.accuracy.init(y)
@@ -918,6 +918,82 @@ class Model:
             layer.backward(layer.next.dinputs)
 
 
+def make_trendlines(candles):
+
+    trendlines = []
+    ts = 0
+    trend_state = []
+
+    for index, candle in enumerate(candles):
+        # print("CANDLE", index, candle) # [t, o, h, l, c, v]
+        if index == 0:
+            current = {
+                "Time": candles[0][0],
+                "Point": candles[0][2],
+                "Inv": candles[0][3],
+                "Direction": 0 if candles[0][2] < candles[0][3] else 1,
+            }
+            trendlines.append(current)
+            trend_state.append(0 if candles[0][2] < candles[0][3] else 1)
+            pass
+        else:
+            # Higher High in uptrend  (continuation)
+            if candle[2] > current["Point"] and current["Direction"] == 1:
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[2],
+                    "Inv": candle[3],
+                    "Direction": 1,
+                }
+                ts = 1
+
+                
+            # Higher High in downtrend  (new trend)
+            if (candle[2] > current["Inv"]  and current["Direction"] == 0):
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[2],
+                    "Inv": candle[3],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 1
+                
+            # Lower Low in uptrend (new trend)
+            if (candle[3] < current["Inv"]  and current["Direction"] == 1):
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[3],
+                    "Inv": candle[2],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 0
+
+                
+                
+            # Lower Low in downtrend  (continuation)
+            if candle[3] < current["Point"] and current["Direction"] == 0:
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[3],
+                    "Inv": candle[2],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 0
+
+
+            # Janky fix to get over skipping trends that have the same unique time for start and end
+            # if current["StartTime"] == current["EndTime"]:
+            #     current["StartTime"] -= 1
+            trendlines.append(current)
+            # print("CANDLE LENGTH", len(current))
+            trend_state.append(ts)
+            
+        # print("Trendline", current, "\n")
+
+
+    return trend_state
+
+
 def load_dataset():
     connection = mysql.connector.connect(
         host="localhost",
@@ -933,43 +1009,30 @@ def load_dataset():
 
     cursor.execute(candles_query)
     candles = cursor.fetchall()
-    cursor.execute(trends_query)
-    trends = cursor.fetchall()
+    # cursor.execute(trends_query)
+    # trends = cursor.fetchall()
+    trends = make_trendlines(candles)
 
     cursor.close()
     connection.close()
-
-    print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)}" )
-
-
-    # Filter out unnecessary data, using only end_points in the trends array
-    trend_endpoints = []
-
-    for trend in trends:
-        result = 0 if trend[10] == 'down' else 1
-        temp = [trend[6], trend[5], trend[7], result] # [end_time, end_point, end_invalidation, trend_state: up/down]
-        trend_endpoints.append(temp)
-        
+    print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)} \n" )
     
     # Split the data into 90:10 training and validation
-    trends_training = trend_endpoints[:math.floor(len(trends) * 0.9)]
-    trends_test = trend_endpoints[:math.floor(len(trends) * 0.1)]
+    candles_training = candles[:math.floor(len(candles) * 0.9)]
+    candles_test = candles[:math.floor(len(candles) * 0.1)]
+
+    trends_training = trends[:math.floor(len(trends) * 0.9)]
+    trends_test = trends[:math.floor(len(trends) * 0.1)]
+
 
     print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
 
-    print("LAST TREND \n", trends_training[-1])
-
-    # Find the index of the candles array that matches the trends_training[-1][0]
-    candle_index = next((index for index, candle in enumerate(candles) if candle[0] == trends_training[-1][0]), None)
-    
-    print(f"Matching Index: {candle_index} \n {candles[candle_index]} \n")
-
     # Create test data with the candles[:candle_index]
 
-    X = candles[:candle_index]
+    X = candles_training
     y = trends_training
 
-    X_test = candles[candle_index:]
+    X_test = candles_test
     y_test = trends_test
 
     # print(f"TRAINING DATA \n {len(X)}")
@@ -979,8 +1042,14 @@ def load_dataset():
     
 
 
-# X, y = spiral_data(samples=1000, classes=3)
-# X_test, y_test = spiral_data(samples=100, classes=3)
+X, y = spiral_data(samples=1000, classes=3)
+print("SPIRAL SHAPE", X, "\n", y, "\n")
+
+X = np.array(X)
+y = np.array(y)
+
+print("SPIRAL SHAPE", X.shape, "\n", y.shape, "\n")
+X_test, y_test = spiral_data(samples=100, classes=3)
 
 # Create dataset
 # X = [[t, o, h, l, c], [...], ...] (input values)
@@ -991,6 +1060,14 @@ def load_dataset():
 # Load dataset
 X, y, X_test, y_test = load_dataset()
 
+X = np.array(X)
+y = np.array(y)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
+# print("TEST SHAPE", X, "\n", y, "\n")
+print(f"Training SHAPE \n X_Training {X.shape} \n Y_Training {y.shape} \n")
+print("Test SHAPE \n", X_test.shape, "\n", y_test.shape, "\n")
+
 # Instantiate the model
 model = Model()
 
@@ -998,7 +1075,7 @@ model = Model()
 model.add(Layer_Dense(6, 6, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4))
 model.add(Activation_ReLU())
 model.add(Layer_Dropout(0.1))
-model.add(Layer_Dense(6, 5))
+model.add(Layer_Dense(6, 1))
 model.add(Activation_Softmax())
 
 # Set loss, optimizer and accuracy objects
@@ -1012,4 +1089,5 @@ model.set(
 model.finalize()
 
 # Train the model
+# model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
 model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
