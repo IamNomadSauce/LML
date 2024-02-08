@@ -22,9 +22,9 @@ class Circle_Model_0(nn.Module):
 class Circle_Model_1(nn.Module):
     def __init__(self):
         super().__init__()
-        self.layer_1 = nn.Linear(in_features=6, out_features=18)
-        self.layer_2 = nn.Linear(in_features=18, out_features=18)
-        self.layer_3 = nn.Linear(in_features=18, out_features=1)
+        self.layer_1 = nn.Linear(in_features=5, out_features=10)
+        self.layer_2 = nn.Linear(in_features=10, out_features=10)
+        self.layer_3 = nn.Linear(in_features=10, out_features=1)
         self.relu = nn.ReLU() # <- add in ReLU activation function
         # Can also put sigmoid in the model 
         # This would mean you don't need to use it on the predictions
@@ -301,193 +301,193 @@ print(f"\nDevice: {device} \n")
 
 
 # ----------------------------------------------------------------------
-# Attempt to use custom candlestick data (Does not work with circular models)
+# Attempt to use custom candlestick data
 # ----------------------------------------------------------------------
-# def make_trendlines(candles):
-#     trendlines = []
-#     ts = 1
-#     trend_state = []
+def make_trendlines(candles):
+    trendlines = []
+    ts = 1
+    trend_state = []
 
-#     for index, candle in enumerate(candles):
-#         # print("CANDLE", index, candle) # [t, o, h, l, c, v]
-#         if index == 0:
-#             current = {
-#                 "Time": candles[0][0],
-#                 "Point": candles[0][2],
-#                 "Inv": candles[0][3],
-#                 "Direction": -1 if candles[0][2] < candles[0][3] else 1,
-#             }
-#             trendlines.append(current)
-#             trend_state.append(-1 if candles[0][2] < candles[0][3] else 1)
-#             pass
-#         else:
-#             # Higher High in uptrend  (continuation)
-#             if candle[2] > current["Point"] and current["Direction"] == 1:
-#                 current = {
-#                     "Time": candle[0],
-#                     "Point": candle[2],
-#                     "Inv": candle[3],
-#                     "Direction": 1,
-#                 }
-#                 ts = 1
-
-                
-#             # Higher High in downtrend  (new trend)
-#             if (candle[2] > current["Inv"]  and current["Direction"] == 0):
-#                 current = {
-#                     "Time": candle[0],
-#                     "Point": candle[2],
-#                     "Inv": candle[3],
-#                     "Direction": 0 if candle[2] < candle[3] else 1,
-#                 }
-#                 ts = 1
-                
-#             # Lower Low in uptrend (new trend)
-#             if (candle[3] < current["Inv"]  and current["Direction"] == 1):
-#                 current = {
-#                     "Time": candle[0],
-#                     "Point": candle[3],
-#                     "Inv": candle[2],
-#                     "Direction": 0 if candle[2] < candle[3] else 1,
-#                 }
-#                 ts = 0
+    for index, candle in enumerate(candles):
+        # print("CANDLE", index, candle) # [t, o, h, l, c, v]
+        if index == 0:
+            current = {
+                "Time": candles[0][0],
+                "Point": candles[0][2],
+                "Inv": candles[0][3],
+                "Direction": -1 if candles[0][2] < candles[0][3] else 1,
+            }
+            trendlines.append(current)
+            trend_state.append(-1 if candles[0][2] < candles[0][3] else 1)
+            pass
+        else:
+            # Higher High in uptrend  (continuation)
+            if candle[2] > current["Point"] and current["Direction"] == 1:
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[2],
+                    "Inv": candle[3],
+                    "Direction": 1,
+                }
+                ts = 1
 
                 
+            # Higher High in downtrend  (new trend)
+            if (candle[2] > current["Inv"]  and current["Direction"] == 0):
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[2],
+                    "Inv": candle[3],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 1
                 
-#             # Lower Low in downtrend  (continuation)
-#             if candle[3] < current["Point"] and current["Direction"] == 0:
-#                 current = {
-#                     "Time": candle[0],
-#                     "Point": candle[3],
-#                     "Inv": candle[2],
-#                     "Direction": 0 if candle[2] < candle[3] else 1,
-#                 }
-#                 ts = 0
+            # Lower Low in uptrend (new trend)
+            if (candle[3] < current["Inv"]  and current["Direction"] == 1):
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[3],
+                    "Inv": candle[2],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 0
+
+                
+                
+            # Lower Low in downtrend  (continuation)
+            if candle[3] < current["Point"] and current["Direction"] == 0:
+                current = {
+                    "Time": candle[0],
+                    "Point": candle[3],
+                    "Inv": candle[2],
+                    "Direction": 0 if candle[2] < candle[3] else 1,
+                }
+                ts = 0
 
 
-#             # Janky fix to get over skipping trends that have the same unique time for start and end
-#             # if current["StartTime"] == current["EndTime"]:
-#             #     current["StartTime"] -= 1
-#             trendlines.append(current)
-#             # print("CANDLE LENGTH", len(current))
-#             # print("TREND", ts)
-#             trend_state.append(ts)
+            # Janky fix to get over skipping trends that have the same unique time for start and end
+            # if current["StartTime"] == current["EndTime"]:
+            #     current["StartTime"] -= 1
+            trendlines.append(current)
+            # print("CANDLE LENGTH", len(current))
+            # print("TREND", ts)
+            trend_state.append(ts)
             
-#         # print("Trendline", current, "\n")
+        # print("Trendline", current, "\n")
 
 
-#     return trend_state
+    return trend_state
 
-# def load_dataset():
-#     connection = mysql.connector.connect(
-#         host="localhost",
-#         user="root",
-#         password="1234567",
-#         database="markets"
-#     )
+def load_dataset():
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="1234567",
+        database="markets"
+    )
 
-#     cursor = connection.cursor()
+    cursor = connection.cursor()
 
-#     candles_query = "SELECT * FROM coinbase_BTCUSD_1 ORDER BY time"
-#     trends_query = "SELECT * FROM coinbase_BTCUSD_1_trendlines"
+    candles_query = "SELECT * FROM coinbase_BTCUSD_1 ORDER BY time"
+    trends_query = "SELECT * FROM coinbase_BTCUSD_1_trendlines"
 
-#     cursor.execute(candles_query)
-#     candles = cursor.fetchall()
-#     # cursor.execute(trends_query)
-#     # trends = cursor.fetchall()
-#     trends = make_trendlines(candles)
+    cursor.execute(candles_query)
+    candles = cursor.fetchall()
+    # cursor.execute(trends_query)
+    # trends = cursor.fetchall()
+    trends = make_trendlines(candles)
 
-#     # print(f"TRENDS {trends}")
+    # print(f"TRENDS {trends}")
 
 
-#     cursor.close()
-#     connection.close()
-#     # print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)} \n" )
+    cursor.close()
+    connection.close()
+    # print(f"Candles length {len(candles)} \n", f"TRENDS LENGTH {len(trends)} \n" )
     
-#     # Split the data into 90:10 training and validation
-#     candles_training = candles[:math.floor(len(candles) * 0.9)]
-#     candles_test = candles[:math.floor(len(candles) * 0.1)]
+    # Split the data into 90:10 training and validation
+    candles_training = candles[:math.floor(len(candles) * 0.9)]
+    candles_test = candles[:math.floor(len(candles) * 0.1)]
 
-#     trends_training = trends[:math.floor(len(trends) * 0.9)]
-#     trends_test = trends[:math.floor(len(trends) * 0.1)]
+    trends_training = trends[:math.floor(len(trends) * 0.9)]
+    trends_test = trends[:math.floor(len(trends) * 0.1)]
 
 
-#     # print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
+    # print(f"SPLIT DATA \n {len(trends_training)} \n {len(trends_test)} \n")
 
-#     # Create test data with the candles[:candle_index]
+    # Create test data with the candles[:candle_index]
 
-#     X = candles_training
-#     y = trends_training
+    X = candles_training
+    y = trends_training
 
-#     X_test = candles_test
-#     y_test = trends_test
+    X_test = candles_test
+    y_test = trends_test
 
-#     # print(f"TRAINING DATA \n {len(X)}")
+    # print(f"TRAINING DATA \n {len(X)}")
     
-#     return np.array(X), np.array(y), np.array(X_test), np.array(y_test)
+    return np.array(X), np.array(y), np.array(X_test), np.array(y_test)
 
-# n_samples = 1000
-# epochs = 1000
-# torch.manual_seed(42)
-# X, y, X_test, y_test = load_dataset()
-
-
-# X = torch.from_numpy(X).type(torch.float)
-# y = torch.from_numpy(y).type(torch.float)
-# # plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.RdBu);
-# # # Split data into train and test sets
-# X, X_test, y, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# model_3 = Circle_Model_1().to(device)
-# print(model_3)
-
-# loss_fn = nn.BCEWithLogitsLoss()
-# optimizer = torch.optim.SGD(model_3.parameters(), lr=0.1)
+n_samples = 1000
+epochs = 1000
+torch.manual_seed(42)
+X, y, X_test, y_test = load_dataset()
 
 
-# X, y = X.to(device), y.to(device)
-# X_test, y_test = X_test.to(device), y_test.to(device)
+X = torch.from_numpy(X).type(torch.float)
+y = torch.from_numpy(y).type(torch.float)
+# plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.RdBu);
+# # Split data into train and test sets
+X, X_test, y, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# for epoch in range(epochs):
-#     # 1. Forward pass
-#     y_logits = model_3(X).squeeze()
-#     y_pred = torch.round(torch.sigmoid(y_logits)) # logits -> prediction probabilities -> prediction labels
+model_3 = Circle_Model_1().to(device)
+print(model_3)
+
+loss_fn = nn.BCEWithLogitsLoss()
+optimizer = torch.optim.SGD(model_3.parameters(), lr=0.1)
+
+
+X, y = X.to(device), y.to(device)
+X_test, y_test = X_test.to(device), y_test.to(device)
+
+for epoch in range(epochs):
+    # 1. Forward pass
+    y_logits = model_3(X).squeeze()
+    y_pred = torch.round(torch.sigmoid(y_logits)) # logits -> prediction probabilities -> prediction labels
     
-#     # 2. Calculate loss and accuracy
-#     loss = loss_fn(y_logits, y) # BCEWithLogitsLoss calculates loss using logits
-#     acc = accuracy_fn(y_true=y, 
-#                       y_pred=y_pred)
+    # 2. Calculate loss and accuracy
+    loss = loss_fn(y_logits, y) # BCEWithLogitsLoss calculates loss using logits
+    acc = accuracy_fn(y_true=y, 
+                      y_pred=y_pred)
     
-#     # 3. Optimizer zero grad
-#     optimizer.zero_grad()
+    # 3. Optimizer zero grad
+    optimizer.zero_grad()
 
-#     # 4. Loss backward
-#     loss.backward()
+    # 4. Loss backward
+    loss.backward()
 
-#     # 5. Optimizer step
-#     optimizer.step()
+    # 5. Optimizer step
+    optimizer.step()
 
-#     ### Testing
-#     model_3.eval()
-#     with torch.inference_mode():
-#       # 1. Forward pass
-#       test_logits = model_3(X_test).squeeze()
-#       test_pred = torch.round(torch.sigmoid(test_logits)) # logits -> prediction probabilities -> prediction labels
-#       # 2. Calcuate loss and accuracy
-#       test_loss = loss_fn(test_logits, y_test)
-#       test_acc = accuracy_fn(y_true=y_test, y_pred=test_pred)
+    ### Testing
+    model_3.eval()
+    with torch.inference_mode():
+      # 1. Forward pass
+      test_logits = model_3(X_test).squeeze()
+      test_pred = torch.round(torch.sigmoid(test_logits)) # logits -> prediction probabilities -> prediction labels
+      # 2. Calcuate loss and accuracy
+      test_loss = loss_fn(test_logits, y_test)
+      test_acc = accuracy_fn(y_true=y_test, y_pred=test_pred)
 
-#     # Print out what's happening
-#     if epoch % 100 == 0:
-#         print(f"Epoch: {epoch} | Loss: {loss:.5f}, Accuracy: {acc:.2f}% | Test Loss: {test_loss:.5f}, Test Accuracy: {test_acc:.2f}%")
-
-
-# model_3.eval()
-# with torch.inference_mode():
-#     y_preds = torch.round(torch.sigmoid(model_3(X_test))).squeeze()
+    # Print out what's happening
+    if epoch % 100 == 0:
+        print(f"Epoch: {epoch} | Loss: {loss:.5f}, Accuracy: {acc:.2f}% | Test Loss: {test_loss:.5f}, Test Accuracy: {test_acc:.2f}%")
 
 
-# print(f"{y_preds[:10], y[:10]}")
+model_3.eval()
+with torch.inference_mode():
+    y_preds = torch.round(torch.sigmoid(model_3(X_test))).squeeze()
+
+
+print(f"{y_preds[:10], y[:10]}")
 # ----------------------------------------------------------------------
 
 
