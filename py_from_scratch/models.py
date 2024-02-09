@@ -926,7 +926,6 @@ class Model:
 
 
 def make_trendlines(candles):
-
     trendlines = []
     ts = 1
     trend_state = []
