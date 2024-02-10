@@ -40,19 +40,51 @@ class BinaryClassifier(nn.Module):
 
 # --------------------------------------------------------------------
 # Evaluation function for accuracy
-def calculate_accuracy(y_true, y_pred_logits):
-    y_pred = torch.round(torch.sigmoid(y_pred_logits))  # Convert logits to probabilities and then to binary labels
-    # print(f"PREDICTIONS {y_true} \n {y_pred}\n")
-    correct = (y_pred == y_true).float()  # Compare predicted labels with true labels
-    accuracy = correct.sum() / len(correct)  # Calculate accuracy
-    return accuracy.item() * 100  # Return accuracy as a percentage
+def calculate_accuracy(predicted, y_true):
+    # Ensure both tensors are on the same device
+    y_true = y_true.to(device)
+    predicted = predicted.to(device)
+    
+    # Convert logits to probabilities and then to binary labels
+    y_pred = torch.round(torch.sigmoid(predicted))
+    
+    # Debugging: Print the predicted tensor before and after rounding
+    # print(f"Predicted (logits): \n{y_pred}")
+    # print(f"Truth (logits): \n{y_true}")
+    # print(f"Predicted (rounded): {y_pred} | \n{y_true}")
+    
+    # Compare predicted labels with true labels
+    correct = 0
+
+    print(len(y_pred))
+
+    for v in range(len(y_true)):
+        if y_pred[v][0] == y_true[v]:
+            correct+=1
+        # print(f"Predicted | Truth\n{(y_pred[v][0] == y_true[v]).float()} | {y_pred[v][0]} | {y_true[v]}\n")
+    
+    # Calculate accuracy
+    accuracy = correct / len(y_pred)
+    
+    # Return accuracy as a percentage
+    print(f"ACCURACY | {accuracy}")
+    return accuracy * 100
 
 
 # --------------------------------------------------------------------
 # Train the Model
 # --------------------------------------------------------------------
 model = BinaryClassifier().to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-5)
+optimizer = optim.Adam(model.parameters(), lr=5e-3, weight_decay=5e-5)
+
+def evaluate(train, test):
+
+    # Evaluation on training data
+    model.eval()
+    with torch.no_grad():
+        train_logits = model(train).squeeze()
+        train_accuracy = calculate_accuracy(test, train_logits)
+    return train_accuracy
 
 def train(
         model: nn.Module, 
@@ -95,21 +127,18 @@ def train(
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
         # Evaluation on training data
-        model.eval()
-        with torch.no_grad():
-            train_logits = model(X_train).squeeze()
-            train_accuracy = calculate_accuracy(y_train, train_logits)
-            train_accuracies.append(train_accuracy)
         
-        # Evaluation on test data
-        with torch.no_grad():
-            test_logits = model(X_test).squeeze()
-            test_accuracy = calculate_accuracy(y_test, test_logits)
-            test_accuracies.append(test_accuracy)
+        train_accuracy = evaluate(X_train, y_train)
+        test_accuracy = evaluate(X_test, y_test)
+
+        train_accuracies.append(train_accuracy)
+        test_accuracies.append(test_accuracy)
         
         if (epoch+1) % 100 == 0:
             print(f'Epoch [{epoch+1}/{num_epochs}], Training Accuracy: {train_accuracy:.2f}%, Test Accuracy: {test_accuracy:.2f}%')
-        
+    
+    # Save Model and Weights
+    torch.save(model.state_dict(), './weights/model_weights.pth')        
     # Plotting
     plt.figure(figsize=(10, 5), facecolor='#212f3d')
     plt.plot(train_accuracies, label='Training Accuracy')
@@ -126,4 +155,19 @@ def train(
 
     return
 
-train(model=model, data=data_loader.load_dataset(), optimizer=optimizer)
+def load_weights(model: nn.Module, input_data, validation_data):
+    model.load_state_dict(torch.load('./weights/model_weights.pth', map_location=device))
+    model.eval()
+    predictions = []
+    with torch.no_grad():
+        input_data = input_data.to(device)
+        predictions = model(input_data)
+        inf_accuracy = calculate_accuracy(predictions, validation_data)
+        print(f"Inference Accuracy {inf_accuracy}%")
+    
+    # print(f"Predictions: {predictions}\nTruth: {validation_data}")
+
+# train(model=model, data=data_loader.load_dataset("BTCUSD"), optimizer=optimizer)
+
+X_train, y_train, X_test, y_test = data_loader.load_dataset("DOGEUSD")
+load_weights(model, X_train, y_train)

@@ -12,7 +12,7 @@ def mean_normalize(data, mean_vals, range_vals):
     return (data - mean_vals) / range_vals
 
 
-def load_dataset():
+def load_dataset(symbol: str):
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -22,18 +22,15 @@ def load_dataset():
 
     cursor = connection.cursor()
 
-    candles_query = "SELECT * FROM coinbase_ETHUSD_1 ORDER BY time"
+    candles_query = f"SELECT * FROM coinbase_{symbol}_1 ORDER BY time"
     cursor.execute(candles_query)
     candles = cursor.fetchall()
     print(f"{len(candles)} Candles \n")
     # Limit to 1000 candles
-    candles = candles[:1000]
-
-    # Assuming make_trendlines is a function defined elsewhere that you're using
-    trends = make_trendlines(candles)
-
+    candles = candles[:10000]
     cursor.close()
     connection.close()
+    trends = make_trendlines(candles)
 
     # Split the data into 80:20 training and test
     split_index = math.floor(len(candles) * 0.8)

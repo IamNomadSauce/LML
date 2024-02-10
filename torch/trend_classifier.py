@@ -203,7 +203,7 @@ model = BinaryClassifier().to(device)
 loss_fn = nn.BCEWithLogitsLoss()
 
 # Optimizer (using Adam)
-optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=5e-5)
+optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=5e-5)
 
 train_accuracies = []
 test_accuracies = []
