@@ -6,6 +6,7 @@ import math
 import matplotlib.pyplot as plt
 # import data_setup, engine, model_builder, utils
 
+import argparse
 import data_loader
 
 # set hyperparameters
@@ -40,35 +41,21 @@ class BinaryClassifier(nn.Module):
 
 # --------------------------------------------------------------------
 # Evaluation function for accuracy
-def calculate_accuracy(predicted, y_true):
-    # Ensure both tensors are on the same device
+def calculate_accuracy(y_true, predicted):
     y_true = y_true.to(device)
     predicted = predicted.to(device)
-    
-    # Convert logits to probabilities and then to binary labels
-    y_pred = torch.round(torch.sigmoid(predicted))
-    
-    # Debugging: Print the predicted tensor before and after rounding
-    # print(f"Predicted (logits): \n{y_pred}")
-    # print(f"Truth (logits): \n{y_true}")
-    # print(f"Predicted (rounded): {y_pred} | \n{y_true}")
-    
-    # Compare predicted labels with true labels
-    correct = 0
 
-    print(len(y_pred))
+    print("Calculate Accuracy\n yTrue", y_true,"\n Predicted\n", predicted, "\n")
+    output_true = torch.round(torch.sigmoid(y_true))
+    y_pred = torch.round(torch.sigmoid(predicted))  # Convert logits to probabilities and then to binary labels
+    print('YPRED', y_pred.size(), "\n Output", output_true.size() )
+    # for i in range(y_pred):
+    #     print(y_pred)
+    print(f"\n True \n{y_true} Predictions \n{y_pred}\n")
+    correct = (y_pred == output_true).float()  # Compare predicted labels with true labels
 
-    for v in range(len(y_true)):
-        if y_pred[v][0] == y_true[v]:
-            correct+=1
-        # print(f"Predicted | Truth\n{(y_pred[v][0] == y_true[v]).float()} | {y_pred[v][0]} | {y_true[v]}\n")
-    
-    # Calculate accuracy
-    accuracy = correct / len(y_pred)
-    
-    # Return accuracy as a percentage
-    print(f"ACCURACY | {accuracy}")
-    return accuracy * 100
+    accuracy = correct.sum() / len(correct)  # Calculate accuracy
+    return accuracy.item() * 100  # Return accuracy as a percentage
 
 
 # --------------------------------------------------------------------
@@ -138,7 +125,7 @@ def train(
             print(f'Epoch [{epoch+1}/{num_epochs}], Training Accuracy: {train_accuracy:.2f}%, Test Accuracy: {test_accuracy:.2f}%')
     
     # Save Model and Weights
-    torch.save(model.state_dict(), './weights/model_weights.pth')        
+    torch.save(model.state_dict(), './weights/model_weights.pth')
     # Plotting
     plt.figure(figsize=(10, 5), facecolor='#212f3d')
     plt.plot(train_accuracies, label='Training Accuracy')
@@ -155,19 +142,84 @@ def train(
 
     return
 
-def load_weights(model: nn.Module, input_data, validation_data):
+def load_weights(model: nn.Module, input_data, val_data):
     model.load_state_dict(torch.load('./weights/model_weights.pth', map_location=device))
     model.eval()
     predictions = []
     with torch.no_grad():
         input_data = input_data.to(device)
-        predictions = model(input_data)
-        inf_accuracy = calculate_accuracy(predictions, validation_data)
-        print(f"Inference Accuracy {inf_accuracy}%")
+        predictions = model(input_data).to(device)
+        inf_accuracy = calculate_accuracy(val_data, predictions[0])
+        print(f"INF ACCURACY {inf_accuracy}")
     
-    # print(f"Predictions: {predictions}\nTruth: {validation_data}")
+    # print(f"Predictions: {predictions}")
 
-# train(model=model, data=data_loader.load_dataset("BTCUSD"), optimizer=optimizer)
 
-X_train, y_train, X_test, y_test = data_loader.load_dataset("DOGEUSD")
-load_weights(model, X_train, y_train)
+# --------------------------------------------------------------------
+# ARG-Parse
+# --------------------------------------------------------------------
+
+# Create the parser
+parser = argparse.ArgumentParser(description="A script to train a model or run inference")
+
+# Add the 'train' argument
+parser.add_argument('--train', action='store_true', help='Train the model')
+
+# Add the 'inf' argument
+parser.add_argument('--inf', action='store_true', help='Run inference on saved model')
+
+# Parse the arguments
+args = parser.parse_args()
+
+# Use the arguments in your script
+if args.train:
+    # Train the model
+    print("TRAIN")
+    train(model=model, data=data_loader.load_dataset("BTCUSD"), optimizer=optimizer)
+
+if args.inf:
+    # Run Inference
+    print("Inference")
+    X_train, y_train, X_test, y_test = data_loader.load_dataset("DOGEUSD")
+    load_weights(model, X_train, y_train)
+
+
+
+
+
+
+
+
+
+# # Evaluation function for accuracy
+# def calculate_accuracy(predicted, y_true):
+#     # Ensure both tensors are on the same device
+#     y_true = y_true.to(device)
+#     predicted = predicted.to(device)
+
+#     # Convert logits to probabilities and then to binary labels
+#     y_pred = torch.round(torch.sigmoid(predicted))
+#     # print(f"Calc Acc\n {predicted}\n{y_pred}")
+    
+#     # Debugging: Print the predicted tensor before and after rounding
+#     # print(f"Predicted (logits): \n{y_pred}")
+#     # print(f"Truth (logits): \n{y_true}")
+#     # print(f"Predicted (rounded): {y_pred} | \n{y_true}")
+    
+#     # Compare predicted labels with true labels
+#     correct = (y_pred == y_true).float()
+#     accuracy = correct.sum() / len(y_pred)
+
+#     # print(len(correct))
+
+#     # for v in range(len(y_true)):
+#     #     if y_pred[v][0] == y_true[v]:
+#     #         correct+=1
+#     #     # print(f"Predicted | Truth\n{(y_pred[v][0] == y_true[v]).float()} | {y_pred[v][0]} | {y_true[v]}\n")
+    
+#     # # Calculate accuracy
+#     # accuracy = correct / len(y_pred)
+    
+#     # # Return accuracy as a percentage
+#     # print(f"ACCURACY | {accuracy}")
+#     return accuracy * 100
