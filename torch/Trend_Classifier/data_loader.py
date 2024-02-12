@@ -42,8 +42,8 @@ def load_dataset(symbol: str):
     trends_test = trends[split_index:]
 
     # Extract the relevant features from candles
-    candles_training = np.array([[candle[1], candle[2], candle[3], candle[4]] for candle in candles_training])
-    candles_test = np.array([[candle[1], candle[2], candle[3], candle[4]] for candle in candles_test])
+    candles_training = np.array([[candle[1], candle[4]] for candle in candles_training])
+    candles_test = np.array([[candle[1], candle[4]] for candle in candles_test])
 
     # Calculate mean and range for mean normalization using training data
     mean_vals = np.mean(candles_training, axis=0)
