@@ -6,13 +6,58 @@ import mysql.connector
 
 import math
 import numpy as np
-
+import random
 
 def mean_normalize(data, mean_vals, range_vals):
     return (data - mean_vals) / range_vals
 
+def generate_data(num):
+    print("Generate data", num)
+    data = []
+    inputs = []
+    outputs = []
+    for i in range(num):
+        a = random.randint(1, 100000)
+        b = random.randint(1, 100000)
+        c = int(a < b)
+        inputs.append([a, b])
+        outputs.append([c])
+        data.append([inputs, outputs])
 
-def load_dataset(symbol: str):
+    # Calculate mean and range for mean normalization using training data
+    mean_vals = np.mean(inputs, axis=0)
+    range_vals = np.max(inputs, axis=0) - np.min(inputs, axis=0)
+
+    split_index = math.floor(len(data) * 0.8)
+    X_training = inputs[:split_index]
+    X_test = inputs[split_index:]
+    y_training = outputs[:split_index]
+    y_test = outputs[split_index:]
+
+    
+
+    # Normalize the data
+    training_normalized = mean_normalize(X_training, mean_vals, range_vals)
+    test_normalized = mean_normalize(X_test, mean_vals, range_vals)
+
+    # Convert lists of numpy.ndarrays to single numpy.ndarrays
+    X_train_np = np.array(training_normalized)
+    y_train_np = np.array(y_training)
+    X_test_np = np.array(test_normalized)
+    y_test_np = np.array(y_test)
+
+    # Convert numpy.ndarrays to PyTorch tensors
+    X_train_tensor = torch.tensor(X_train_np, dtype=torch.float)
+    y_train_tensor = torch.tensor(y_train_np, dtype=torch.float)
+    X_test_tensor = torch.tensor(X_test_np, dtype=torch.float)
+    y_test_tensor = torch.tensor(y_test_np, dtype=torch.float)
+
+    return X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor
+    
+
+
+
+def load_dataset(symbol: str, batch=False):
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
