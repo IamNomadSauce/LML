@@ -4,8 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import math
 import matplotlib.pyplot as plt
-# import data_setup, engine, model_builder, utils
-
+from torch.utils.data import DataLoader
 import argparse
 import data_loader
 
@@ -61,6 +60,7 @@ def calculate_accuracy(y_true, predicted):
 # --------------------------------------------------------------------
 # Train the Model
 # --------------------------------------------------------------------
+
 model = BinaryClassifier().to(device)
 optimizer = optim.Adam(model.parameters(), lr=5e-3, weight_decay=5e-5)
 
@@ -179,6 +179,9 @@ def eval_inf(X, y):
     
     # print(f"Predictions: {predictions}")
 
+
+
+
 # Use the arguments in your script
 if args.train:
     # Train the model
@@ -188,54 +191,7 @@ if args.train:
 if args.inf:
     # Run Inference
     print("Inference")
-    X_train, y_train, X_test, y_test = data_loader.load_dataset("XRPUSD")
+    X_train, y_train, X_test, y_test = data_loader.load_dataset("BTCUSD")
     loaded_model = load_weights(model)
     eval_inf( X_train, y_train)
-    print("Model Loaded", loaded_model)
-
-
-
-
-
-
-# def calculate_accuracy(y_true, predicted):
-#     print("Calculate Accuracy\n", y_true,"\n", predicted)
-#     y_pred = torch.round(torch.sigmoid(predicted))  # Convert logits to probabilities and then to binary labels
-#     print(f"PREDICTIONS {y_true} \n {y_pred}\n")
-#     correct = (y_pred == y_true).float()  # Compare predicted labels with true labels
-#     accuracy = correct.sum() / len(correct)  # Calculate accuracy
-#     return accuracy.item() * 100  # Return accuracy as a percentage
-
-
-# # Evaluation function for accuracy
-# def calculate_accuracy(predicted, y_true):
-#     # Ensure both tensors are on the same device
-#     y_true = y_true.to(device)
-#     predicted = predicted.to(device)
-
-#     # Convert logits to probabilities and then to binary labels
-#     y_pred = torch.round(torch.sigmoid(predicted))
-#     # print(f"Calc Acc\n {predicted}\n{y_pred}")
-    
-#     # Debugging: Print the predicted tensor before and after rounding
-#     # print(f"Predicted (logits): \n{y_pred}")
-#     # print(f"Truth (logits): \n{y_true}")
-#     # print(f"Predicted (rounded): {y_pred} | \n{y_true}")
-    
-#     # Compare predicted labels with true labels
-#     correct = (y_pred == y_true).float()
-#     accuracy = correct.sum() / len(y_pred)
-
-#     # print(len(correct))
-
-#     # for v in range(len(y_true)):
-#     #     if y_pred[v][0] == y_true[v]:
-#     #         correct+=1
-#     #     # print(f"Predicted | Truth\n{(y_pred[v][0] == y_true[v]).float()} | {y_pred[v][0]} | {y_true[v]}\n")
-    
-#     # # Calculate accuracy
-#     # accuracy = correct / len(y_pred)
-    
-#     # # Return accuracy as a percentage
-#     # print(f"ACCURACY | {accuracy}")
-#     return accuracy * 100
+    print("Model Loaded", model.state_dict())
