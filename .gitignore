@@ -1,3 +1,2 @@
 /tinygrad
-
-/torch/Trend_Classifier/weights
+/torch/Trend_Classifier/weights/model_weights.pth
