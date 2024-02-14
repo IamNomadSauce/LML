@@ -1,17 +1,23 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim as optim
 import mysql.connector
 
+from torch.utils.data import DataLoader, TensorDataset
+
 import math
 import numpy as np
 import random
+device = "cuda" if torch.cuda.is_available() else "cpu"
+num_workers = os.cpu_count()
+print("CPU Cores:", num_workers)
 
 def mean_normalize(data, mean_vals, range_vals):
     return (data - mean_vals) / range_vals
 
-def generate_data(num):
+def generate_data(num, batch_size):
     print("Generate data", num)
     data = []
     inputs = []
@@ -21,29 +27,28 @@ def generate_data(num):
         b = random.randint(1, 100000)
         c = int(a < b)
         inputs.append([a, b])
-        outputs.append([c])
+        outputs.append(c)
         data.append([inputs, outputs])
 
     # Calculate mean and range for mean normalization using training data
     mean_vals = np.mean(inputs, axis=0)
     range_vals = np.max(inputs, axis=0) - np.min(inputs, axis=0)
+    inputs_normalized = mean_normalize(inputs, mean_vals, range_vals)
 
-    split_index = math.floor(len(data) * 0.8)
-    X_training = inputs[:split_index]
-    X_test = inputs[split_index:]
+    split_index = math.floor(len(inputs_normalized) * 0.8)
+    X_training = inputs_normalized[:split_index]
+    X_test = inputs_normalized[split_index:]
     y_training = outputs[:split_index]
     y_test = outputs[split_index:]
 
     
 
     # Normalize the data
-    training_normalized = mean_normalize(X_training, mean_vals, range_vals)
-    test_normalized = mean_normalize(X_test, mean_vals, range_vals)
 
     # Convert lists of numpy.ndarrays to single numpy.ndarrays
-    X_train_np = np.array(training_normalized)
+    X_train_np = np.array(X_training)
     y_train_np = np.array(y_training)
-    X_test_np = np.array(test_normalized)
+    X_test_np = np.array(X_test)
     y_test_np = np.array(y_test)
 
     # Convert numpy.ndarrays to PyTorch tensors
@@ -51,6 +56,10 @@ def generate_data(num):
     y_train_tensor = torch.tensor(y_train_np, dtype=torch.float)
     X_test_tensor = torch.tensor(X_test_np, dtype=torch.float)
     y_test_tensor = torch.tensor(y_test_np, dtype=torch.float)
+
+    # dataset = TensorDataset(X_train_tensor, y_train_tensor)
+
+    # dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
     return X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor
     
@@ -72,7 +81,7 @@ def load_dataset(symbol: str, batch=False):
     candles = cursor.fetchall()
     print(f"{len(candles)} Candles \n")
     # Limit to 1000 candles
-    candles = candles[:10000]
+    # candles = candles[:10000]
     cursor.close()
     connection.close()
     trends = make_trendlines(candles)
