@@ -17,7 +17,83 @@ print("CPU Cores:", num_workers)
 def mean_normalize(data, mean_vals, range_vals):
     return (data - mean_vals) / range_vals
 
-def generate_data(num, batch_size):
+def generate_point_labels(num):
+    inputs = []
+    outputs = []
+    for i in range(num):
+        a = random.randint(1, 100000)
+        b = random.randint(1, 100000)
+        c = random.randint(b, 100000) if b < a else random.randint(1, b)
+        d = define_pivot(a, b, c)
+        inputs.append([a, b, c])
+        outputs.append(d)
+
+    mean_vals = np.mean(inputs, axis=0)
+    range_vals = np.max(inputs, axis=0)
+    inputs_normalized = mean_normalize(inputs, mean_vals, range_vals)
+
+    
+    split_index = math.floor(len(inputs_normalized) * 0.8)
+    X_training = inputs_normalized[:split_index]
+    X_test = inputs_normalized[split_index:]
+    y_training = outputs[:split_index]
+    y_test = outputs[split_index:]
+
+    
+
+    # Normalize the data
+
+    # Convert lists of numpy.ndarrays to single numpy.ndarrays
+    X_train_np = np.array(X_training)
+    # print("Inputs", X_train_np.shape)
+    # print("Outputs", outputs)
+
+    y_train_np = np.array(y_training)
+    X_test_np = np.array(X_test)
+    y_test_np = np.array(y_test)
+
+    # Convert numpy.ndarrays to PyTorch tensors
+    X_train_tensor = torch.tensor(X_train_np, dtype=torch.float)
+    y_train_tensor = torch.tensor(y_train_np, dtype=torch.float)
+    X_test_tensor = torch.tensor(X_test_np, dtype=torch.float)
+    y_test_tensor = torch.tensor(y_test_np, dtype=torch.float)
+
+    # dataset = TensorDataset(X_train_tensor, y_train_tensor)
+
+    # dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+
+    return X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor
+
+def define_pivot(a, b, c):
+    label = [] # [LL, HL, HH, LH]
+    # HL
+    if a < c and b > c:
+        c_lbl = 'HL'
+        label = [0, 1, 0, 0]
+        c_color = 'gold'
+
+    # LL
+    if b > a and a > c:
+        c_lbl = 'LL'
+        label = [1, 0, 0, 0]
+        c_color = 'green'
+
+    # HH
+    if c > a and b < c:
+        label = [0, 0, 1, 0]
+        c_lbl = 'HH'
+        c_color = 'red'
+
+    # LH
+    if b < c and c < a:
+        label = [0, 0, 0, 1]
+        c_lbl = 'LH'
+        c_color = 'orange'
+
+    # print("Label:", label, a, b, c)
+    return label
+
+def generate_updown_data(num, batch_size):
     print("Generate data", num)
     data = []
     inputs = []
@@ -26,7 +102,7 @@ def generate_data(num, batch_size):
         a = random.randint(1, 100000)
         b = random.randint(1, 100000)
         c = int(a < b)
-        inputs.append([a, b])
+        inputs.append([a, b, c])
         outputs.append(c)
         data.append([inputs, outputs])
 
@@ -81,7 +157,7 @@ def load_dataset(symbol: str, batch=False):
     candles = cursor.fetchall()
     print(f"{len(candles)} Candles \n")
     # Limit to 1000 candles
-    # candles = candles[:10000]
+    # candles = candles[:1000]
     cursor.close()
     connection.close()
     trends = make_trendlines(candles)

@@ -37,6 +37,17 @@ class BinaryClassifier(nn.Module):
         x = self.output(x)  # Output without sigmoid for numerical stability with BCEWithLogitsLoss
         return x
 
+# Define the multi-classification model
+class Multi_Classifier(nn.Module):
+    print()
+    def __init__(self):
+        super(Multi_Classifier, self).__init__()
+        self.layer_1 = nn.Linear(in_features=3, out_features=64)
+        self.layer_2 = nn.Linear(in_features=64, out_features=32) # extra layer
+        self.layer_3 = nn.Linear(in_features=32, out_features=4)
+    
+    def forward(self, x):
+        return self.layer_3(self.layer_2(self.layer_1(x)))
 
 # --------------------------------------------------------------------
 # Evaluation function for accuracy
@@ -56,13 +67,15 @@ def calculate_accuracy(y_true, predicted):
     accuracy = correct.sum() / len(y_true)  # Calculate accuracy
     return accuracy.item() * 100  # Return accuracy as a percentage
 
+def accuracy_fn(y_true, y_pred):
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct / len(y_pred)) * 100
+    return acc
 
 # --------------------------------------------------------------------
 # Train the Model
 # --------------------------------------------------------------------
 
-model = BinaryClassifier().to(device)
-optimizer = optim.Adam(model.parameters(), lr=5e-3, weight_decay=5e-5)
 
 def evaluate(input, output):
     # print(f"Evaluate \n{input.size()} \n{output.size()}\n")
@@ -126,7 +139,7 @@ def train(
             print(f'Epoch [{epoch+1}/{num_epochs}], Training Accuracy: {train_accuracy:.2f}%, Test Accuracy: {test_accuracy:.2f}%')
     
     # Save Model and Weights
-    torch.save(model.state_dict(), './weights/model_weights.pth')
+    torch.save(model.state_dict(), './weights/multiclass_weights.pth')
     # Plotting
     plt.figure(figsize=(10, 5), facecolor='#212f3d')
     plt.plot(train_accuracies, label='Training Accuracy')
@@ -147,6 +160,12 @@ def load_weights(model: nn.Module):
     return model.load_state_dict(torch.load('./weights/model_weights.pth', map_location=device))
     
 
+
+
+# model = BinaryClassifier().to(device)
+model = Multi_Classifier().to(device)
+
+optimizer = optim.Adam(model.parameters(), lr=5e-3, weight_decay=5e-5)
 
 # --------------------------------------------------------------------
 # ARG-Parse
@@ -185,7 +204,9 @@ def eval_inf(X, y, symbol):
 if args.train:
     # Train the model
     print("TRAIN")
-    test_data = data_loader.generate_data(1000000, 32)
+    # test_data = data_loader.generate_updown_data(10000000, 32)
+    test_data = data_loader.generate_point_labels(1000)
+
     print(f"{test_data}")
     train(model=model, data=test_data, optimizer=optimizer)
 
