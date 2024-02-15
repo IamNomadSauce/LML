@@ -129,8 +129,8 @@ def train(
 
         # Evaluation on training data
         
-        train_accuracy = evaluate(X_train, y_train)
-        test_accuracy = evaluate(X_test, y_test)
+        train_accuracy = evaluate(X_train, y_train) / len(X_train)
+        test_accuracy = evaluate(X_test, y_test) / len(X_test)
 
         train_accuracies.append(train_accuracy)
         test_accuracies.append(test_accuracy)
