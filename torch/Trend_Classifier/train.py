@@ -115,7 +115,9 @@ def train(
 
     for epoch in range(num_epochs):
         # Forward pass
+        print("OUTPUT_0", X_train.shape, X_train)
         outputs = model(X_train).squeeze()  # Squeeze the output to match target shape
+        print("OUTPUT_1", outputs.shape, outputs)
         loss = loss_fn(outputs, y_train)
         loss_array.append(loss.item() * 100)
         # Backward and optimize

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	// t "github.com/gotensor/gotensor"
-	// tensor "gobasics.dev/tensor"
+	"go_nn/tensor"
+	"math/rand"
+	"time"
 )
 
 // dotProduct performs the dot product of two 2D tensors (matrices).
@@ -120,41 +121,106 @@ func addBiases(matrix [][]float64, biases [][]float64) ([][]float64, error) {
 }
 
 func main() {
-	// Example matrices A and B
-	inputs := [][]float64{
-		{1, 2, 3},
-		{4, 5, 6},
-		{4, 5, 6},
-	}
-	weights := [][]float64{
-		{7, 8, 9},
-	}
-	biases := [][]float64{
-		{2.0, 3.0, 0.5},
+
+	X := [][]float64{
+		{0., 0.},
+		{0.10738789, 0.02852226},
+		{0.09263825, -0.20199226},
+		{-0.32224888, -0.08524539},
+		{-0.3495118, 0.27454028},
+		{-0.52100587, 0.19285966},
+		{0.5045865, 0.43570277},
+		{0.76882404, 0.11767714},
+		{0.49269393, -0.73984873},
+		{-0.70364994, -0.71054685},
+		{-0., -0.},
+		{-0.07394107, 0.08293611},
+		{0.00808054, 0.22207525},
+		{0.24548167, 0.22549914},
+		{0.38364738, -0.22437814},
+		{-0.00801609, -0.5554977},
+		{-0.66060567, 0.08969161},
+		{-0.7174548, 0.30032802},
+		{0.17299275, 0.87189275},
+		{0.66193414, 0.74956197},
 	}
 
-	weightsT := transpose(weights)
+	X_tensor := tensor.NewTensor(X)
 
-	// Perform the dot product
-	outputs_DP, err := dotProduct(inputs, weightsT)
-	if err != nil {
-		fmt.Println("Error performing dot product:", err)
-		return
+	// inputs := gen_data(100)
+	for _, row := range X_tensor.Data {
+		fmt.Println("Row", row)
 	}
+	fmt.Println("X_tensor", X_tensor.Rows, X_tensor.Cols)
+	// fmt.Println("Inputs\n", inputs.Rows, inputs.Cols, "\n")
 
-	outputs_DP_T := transpose(outputs_DP)
-	// Add biases to the dot product result
-	outputsWithBiases, err := addBiases(outputs_DP_T, biases)
-	if err != nil {
-		fmt.Println("Error adding biases:", err, shape(outputs_DP), shape(biases))
-		return
-	}
+	layer := tensor.New_Dense_Layer(2, 3)
+	// fmt.Println("Layer Weights:\n", layer.Weights.Rows, layer.Weights.Cols, "\n")
+	// fmt.Println("Layer Biases:\n", layer.Biases.Rows, layer.Biases.Cols, "\n")
 
-	// Print the result
-	fmt.Println("Result with biases added:")
-	for _, row := range outputsWithBiases {
-		fmt.Println(row)
-	}
+	layer.Forward(X_tensor)
+
+	// fmt.Println(inputs.Data)
+	// weights := tensor.NewTensor([][]float64{
+	// 	{0.2, 0.8, -0.5, 1.0},
+	// 	{0.5, -0.91, 0.26, -0.5},
+	// 	{-0.26, -0.27, 0.17, 0.87},
+	// })
+
+	// fmt.Println(weights)
+
+	// t := tensor.NewTensor([][]float64{
+	// 	{1, 2, 3},
+	// 	{4, 5, 6},
+	// })
+
+	// Use the Tensor instance.
+	// fmt.Println(t.Data)
+	// // fmt.Println(weights.Data)
+	// biases := tensor.NewTensor([][]float64{
+	// 	{2, 3, 0.5},
+	// })
+
+	// fmt.Println(inputs.Shape())
+	// fmt.Println(weights.Shape())
+	// fmt.Println(biases.Transpose().Data)
+
+	// // Example matrices A and B
+	// inputs := [][]float64{
+	// 	{1, 2, 3},
+	// 	{4, 5, 6},
+	// 	{4, 5, 6},
+	// }
+	// weights := [][]float64{
+	// 	{7, 8, 9},
+	// }
+	// biases := [][]float64{
+	// 	{2.0, 3.0, 0.5},
+	// }
+
+	// weightsT := transpose(weights)
+
+	// // Perform the dot product
+	// outputs_DP, err := dotProduct(inputs, weightsT)
+	// if err != nil {
+	// 	fmt.Println("Error performing dot product:", err)
+	// 	return
+	// }
+
+	// outputs_DP_T := transpose(outputs_DP)
+	// // Add biases to the dot product result
+	// outputsWithBiases, err := addBiases(outputs_DP_T, biases)
+	// if err != nil {
+	// 	fmt.Println("Error adding biases:", err, shape(outputs_DP), shape(biases))
+	// 	return
+	// }
+
+	// // Print the result
+	// fmt.Println("Result with biases added:")
+	// for _, row := range outputsWithBiases {
+	// 	fmt.Println(row)
+	// }
+
 	// for _, row := range A {
 	// 	fmt.Println(row)
 	// }
@@ -178,4 +244,26 @@ func main() {
 
 	// Print the result
 	// fmt.Println("Result of dot product:", C, D)
+}
+
+// generateRandomTuples generates a slice of tuples, each with two random floats in the range of -10 to 10.
+func gen_data(samples int) *tensor.Tensor { // Note the use of tensor.Tensor
+	// Seed the random number generator using the current time
+	rand.Seed(time.Now().UnixNano())
+
+	// Create a 2D slice to hold the random floats
+	data := make([][]float64, samples)
+	for i := range data {
+		data[i] = make([]float64, 2) // Each sample has 2 floats
+		for j := range data[i] {
+			// Generate a random number between 0.0 and 1.0
+			randomFloat := rand.Float64()
+			// Adjust the range to be between -10 and 10
+			randomFloat = randomFloat*2 - 1
+			data[i][j] = randomFloat
+		}
+	}
+
+	// Create and return a new Tensor with the generated data
+	return tensor.NewTensor(data) // Use the NewTensor function from the tensor package
 }

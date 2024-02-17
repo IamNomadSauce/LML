@@ -2,9 +2,9 @@ import numpy as np
 import math
 import mysql.connector
 
-# import nnfs
-# from nnfs.datasets import spiral_data
-# nnfs.init()
+import nnfs
+from nnfs.datasets import spiral_data
+nnfs.init()
 
 
 # Dense layer
@@ -25,10 +25,14 @@ class Layer_Dense:
 
     # Forward pass
     def forward(self, inputs, training):
+        print("FORWARD\nInputs",inputs, inputs.shape, "\nWeights", self.weights, self.weights.shape)
         # Remember input values
         self.inputs = inputs
+        self.training = np.dot(self.inputs, self.weights)
         # Calculate output values from inputs, weights and biases
+        print("\nDL-Forward-DP\n", np.dot(inputs, self.weights), "\n",self.training.shape)
         self.output = np.dot(inputs, self.weights) + self.biases
+        # print("FORWARD DotProduct", self.output)
 
     # Backward pass
     def backward(self, dvalues):
@@ -1052,8 +1056,8 @@ def load_dataset():
     
 
 
-# X, y = spiral_data(samples=1000, classes=3)
-# print(f"SPIRAL SHAPE \n X: {X} \n y {y} \n")
+X, y = spiral_data(samples=10, classes=2)
+print(f"SPIRAL SHAPE \n X: {X.shape} \n y {y.shape} \n", y)
 
 # # X = np.array(X)
 # # y = np.array(y)
@@ -1071,39 +1075,43 @@ def load_dataset():
 print("-----------------------------------------------------------------")
 
 # Load dataset
-X, y, X_test, y_test = load_dataset()
+# X, y, X_test, y_test = load_dataset()
 
 X = np.array(X)
 y = np.array(y)
-X_test = np.array(X_test)
-y_test = np.array(y_test)
-print(f"Trends DATA \n X: {X} \n y {y} \n")
-print(f"Trends SHAPE \n X_Training {X.shape} \n Y_Training {y.shape} \n")
-print(f"Trends Test SHAPE \n X: {X_test} \n y {y_test} \n")
 
-print("-----------------------------------------------------------------")
+dense1 = Layer_Dense(2, 3)
+print("DENSE1", dense1)
+dense1.forward(X, True)
+# X_test = np.array(X_test)
+# y_test = np.array(y_test)
+# print(f"Trends DATA \n X: {X} \n y {y} \n")
+# print(f"Trends SHAPE \n X_Training {X.shape} \n Y_Training {y.shape} \n")
+# # print(f"Trends Test SHAPE \n X: {X_test} \n y {y_test} \n")
+
+# print("-----------------------------------------------------------------")
 
 
-# Instantiate the model
-model = Model()
+# # Instantiate the model
+# model = Model()
 
-# Add layers
-model.add(Layer_Dense(6, 6, weight_regularizer_l2=5e-4, bias_regularizer_l2=3e-4))
-model.add(Activation_ReLU())
-model.add(Layer_Dropout(0.1))
-model.add(Layer_Dense(6, 1))
-model.add(Activation_Softmax())
+# # Add layers
+# model.add(Layer_Dense(2, 3, weight_regularizer_l2=5e-4, bias_regularizer_l2=3e-4))
+# model.add(Activation_ReLU())
+# model.add(Layer_Dropout(0.1))
+# model.add(Layer_Dense(3, 1))
+# model.add(Activation_Softmax())
 
-# Set loss, optimizer and accuracy objects
-model.set(
-    loss=Loss_CategoricalCrossentropy(),
-    optimizer=Optimizer_Adam(learning_rate=0.05, decay=5e-5),
-    accuracy=Accuracy_Categorical()
-)
+# # Set loss, optimizer and accuracy objects
+# model.set(
+#     loss=Loss_CategoricalCrossentropy(),
+#     optimizer=Optimizer_Adam(learning_rate=0.05, decay=5e-5),
+#     accuracy=Accuracy_Categorical()
+# )
 
-# Finalize the model
-model.finalize()
+# # Finalize the model
+# model.finalize()
 
-# Train the model
-# model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
-model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
+# # Train the model
+# # model.train(X, y, validation_data=(X_test, y_test), epochs=10000, print_every=100)
+# model.train(X, y, epochs=10000, print_every=100)
