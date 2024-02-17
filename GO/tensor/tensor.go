@@ -46,7 +46,7 @@ func (t *Tensor) Transpose() *Tensor {
 
 // Add performs element-wise addition with another tensor and returns a new tensor
 func (t *Tensor) Add(other *Tensor) (*Tensor, error) {
-	fmt.Println("Add\nT:\n", t.Rows, t.Cols, "\nOther:\n", other.Rows, other.Cols)
+	fmt.Println("\nAdd\nT:\n", t.Rows, t.Cols, "\nOther:\n", other.Rows, other.Cols)
 	if t.Rows != other.Rows || t.Cols != other.Cols {
 		fmt.Println("Tensors Have Different Shapes!\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 		return nil, fmt.Errorf("tensors have different shapes")
@@ -61,7 +61,7 @@ func (t *Tensor) Add(other *Tensor) (*Tensor, error) {
 	return NewTensor(resultData), nil
 }
 
-func replicateBiases(biases *Tensor, numRows int) *Tensor {
+func reshape(biases *Tensor, numRows int) *Tensor {
 	replicatedBiasesData := make([][]float64, numRows)
 	for i := range replicatedBiasesData {
 		replicatedBiasesData[i] = make([]float64, len(biases.Data[0]))
@@ -158,7 +158,7 @@ func (t *Tensor) DotProduct(other *Tensor) (*Tensor, error) {
 // 	// forward
 
 // 	// Replicate biases to match the shape of dotProduct
-// 	replicatedBiases := replicateBiases(biases, len(dotProduct.Data))
+// 	replicatedBiases := reshape(biases, len(dotProduct.Data))
 
 // 	// Add biases to dotProduct
 // 	dotProductWithBiases, err := dotProduct.Add(replicatedBiases)

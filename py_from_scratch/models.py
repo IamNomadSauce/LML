@@ -28,11 +28,11 @@ class Layer_Dense:
         print("FORWARD\nInputs",inputs, inputs.shape, "\nWeights", self.weights, self.weights.shape)
         # Remember input values
         self.inputs = inputs
-        self.training = np.dot(self.inputs, self.weights)
+        # self.training = np.dot(self.inputs, self.weights)
         # Calculate output values from inputs, weights and biases
-        print("\nDL-Forward-DP\n", np.dot(inputs, self.weights), "\n",self.training.shape)
+        # print("\nDL-Forward-DP\n", np.dot(inputs, self.weights), "\nTraining\n", self.training.shape)
         self.output = np.dot(inputs, self.weights) + self.biases
-        # print("FORWARD DotProduct", self.output)
+        print("FORWARD DotProduct + Bias", self.output)
 
     # Backward pass
     def backward(self, dvalues):
