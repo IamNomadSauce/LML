@@ -155,95 +155,17 @@ func main() {
 	// fmt.Println("Inputs\n", inputs.Rows, inputs.Cols, "\n")
 
 	layer := tensor.New_Dense_Layer(2, 3)
+	layer2 := tensor.New_Dense_Layer(3, 1)
 	// fmt.Println("Layer Weights:\n", layer.Weights.Rows, layer.Weights.Cols, "\n")
 	// fmt.Println("Layer Biases:\n", layer.Biases.Rows, layer.Biases.Cols, "\n")
 
 	layer.Forward(X_tensor)
+	fmt.Println("Main: Layer1 Forward", layer.Outputs.Rows, layer.Outputs.Cols)
 
-	// fmt.Println(inputs.Data)
-	// weights := tensor.NewTensor([][]float64{
-	// 	{0.2, 0.8, -0.5, 1.0},
-	// 	{0.5, -0.91, 0.26, -0.5},
-	// 	{-0.26, -0.27, 0.17, 0.87},
-	// })
+	layer2.Forward(layer.Outputs)
 
-	// fmt.Println(weights)
+	fmt.Println("Main: Layer Forward", layer2.Outputs.Rows, layer2.Outputs.Cols)
 
-	// t := tensor.NewTensor([][]float64{
-	// 	{1, 2, 3},
-	// 	{4, 5, 6},
-	// })
-
-	// Use the Tensor instance.
-	// fmt.Println(t.Data)
-	// // fmt.Println(weights.Data)
-	// biases := tensor.NewTensor([][]float64{
-	// 	{2, 3, 0.5},
-	// })
-
-	// fmt.Println(inputs.Shape())
-	// fmt.Println(weights.Shape())
-	// fmt.Println(biases.Transpose().Data)
-
-	// // Example matrices A and B
-	// inputs := [][]float64{
-	// 	{1, 2, 3},
-	// 	{4, 5, 6},
-	// 	{4, 5, 6},
-	// }
-	// weights := [][]float64{
-	// 	{7, 8, 9},
-	// }
-	// biases := [][]float64{
-	// 	{2.0, 3.0, 0.5},
-	// }
-
-	// weightsT := transpose(weights)
-
-	// // Perform the dot product
-	// outputs_DP, err := dotProduct(inputs, weightsT)
-	// if err != nil {
-	// 	fmt.Println("Error performing dot product:", err)
-	// 	return
-	// }
-
-	// outputs_DP_T := transpose(outputs_DP)
-	// // Add biases to the dot product result
-	// outputsWithBiases, err := addBiases(outputs_DP_T, biases)
-	// if err != nil {
-	// 	fmt.Println("Error adding biases:", err, shape(outputs_DP), shape(biases))
-	// 	return
-	// }
-
-	// // Print the result
-	// fmt.Println("Result with biases added:")
-	// for _, row := range outputsWithBiases {
-	// 	fmt.Println(row)
-	// }
-
-	// for _, row := range A {
-	// 	fmt.Println(row)
-	// }
-	// fmt.Println("\n")
-	// for _, row := range B {
-	// 	fmt.Println(row)
-	// }
-	// fmt.Println("\n")
-	// for _, row := range C {
-	// 	fmt.Println(row)
-	// }
-	// fmt.Println("\n")
-	// for _, row := range D {
-	// 	fmt.Println(row)
-	// }
-	// fmt.Println("\n")
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// 	return
-	// }
-
-	// Print the result
-	// fmt.Println("Result of dot product:", C, D)
 }
 
 // generateRandomTuples generates a slice of tuples, each with two random floats in the range of -10 to 10.
