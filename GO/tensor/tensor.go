@@ -84,6 +84,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 	resultData := make([][]float64, t.Rows)
 	fmt.Println("Tensor-Matrix_Multiply")
 
+	// TODO Implement gonum?
 	for i := range resultData {
 		resultData[i] = make([]float64, other.Cols)
 		for j := range resultData[i] {
