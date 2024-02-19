@@ -11,6 +11,12 @@ type Loss struct {
 	trainableLayers []Layer
 }
 
+// LossFunction represents a loss function
+// TODO May need to add 'forward'
+type LossFunction interface {
+	Calculate(output, y *tensor.Tensor, includeRegularization bool) (float64, float64)
+}
+
 // NewLoss creates a new Loss instance
 func NewLoss() *Loss {
 	return &Loss{}
@@ -114,6 +120,42 @@ func (l *LossCategoricalCrossentropy) Backward(dvalues, yTrue *tensor.Tensor) {
 		for j := range dvalues.Data[i] {
 			l.dinputs.Data[i][j] = -yTrue.Data[i][j] / dvalues.Data[i][j]
 			l.dinputs.Data[i][j] = l.dinputs.Data[i][j] / float64(samples)
+		}
+	}
+}
+
+// -----------------
+// ActivationSoftmaxLossCategoricalCrossentropy represents a combined softmax activation
+// and categorical cross-entropy loss for faster backward step
+type ActivationSoftmaxLossCategoricalCrossentropy struct {
+	dinputs *tensor.Tensor
+}
+
+// NewActivationSoftmaxLossCategoricalCrossentropy creates a new instance
+func NewActivationSoftmaxLossCategoricalCrossentropy() *ActivationSoftmaxLossCategoricalCrossentropy {
+	return &ActivationSoftmaxLossCategoricalCrossentropy{}
+}
+
+// Backward performs the backward pass
+func (a *ActivationSoftmaxLossCategoricalCrossentropy) Backward(dvalues, yTrue *tensor.Tensor) {
+	// Number of samples
+	samples := len(dvalues.Data)
+	// If labels are one-hot encoded, turn them into discrete values
+	if yTrue.Cols > 1 {
+		yTrue = yTrue.Argmax(1)
+	}
+
+	// Copy so we can safely modify
+	a.dinputs = dvalues.Copy()
+	// Calculate gradient
+	for i, label := range yTrue.Data {
+		labelIndex := int(label[0]) // Convert label[0] from float64 to int
+		a.dinputs.Data[i][labelIndex] -= 1
+	}
+	// Normalize gradient
+	for i := range a.dinputs.Data {
+		for j := range a.dinputs.Data[i] {
+			a.dinputs.Data[i][j] /= float64(samples)
 		}
 	}
 }

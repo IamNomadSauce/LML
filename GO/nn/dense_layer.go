@@ -12,10 +12,12 @@ import (
 type Layer interface {
 	GetWeights() *tensor.Tensor
 	GetBiases() *tensor.Tensor
+	Forward(inputs *tensor.Tensor, training bool)
+	Backward(dvalues *tensor.Tensor)
+	GetBiasRegularizerL1() float64 // TODO will probably have to swap these out with Tensor types
+	GetBiasRegularizerL2() float64
 	GetWeightRegularizerL1() float64
 	GetWeightRegularizerL2() float64
-	GetBiasRegularizerL1() float64
-	GetBiasRegularizerL2() float64
 }
 
 type LayerDense struct {
@@ -151,4 +153,21 @@ func (l *LayerDense) Backward(dvalues *tensor.Tensor) {
 
 	// Gradient on values
 	l.DInputs, _ = dvalues.DotProduct(l.Weights.Transpose())
+}
+
+// ------------
+
+// LayerInput represents an input layer
+type LayerInput struct {
+	Output *tensor.Tensor
+}
+
+// NewLayerInput creates a new instance of LayerInput
+func NewLayerInput() *LayerInput {
+	return &LayerInput{}
+}
+
+// Forward performs the forward pass
+func (l *LayerInput) Forward(inputs *tensor.Tensor, training bool) {
+	l.Output = inputs
 }

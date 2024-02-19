@@ -61,9 +61,11 @@ func (a *Activation_ReLU) Backward(dvalues *tensor.Tensor) {
 
 // ActivationSoftmax represents a Softmax activation layer
 type ActivationSoftmax struct {
-	Inputs  *tensor.Tensor
-	Output  *tensor.Tensor
-	DInputs *tensor.Tensor
+	Inputs               *tensor.Tensor
+	Output               *tensor.Tensor
+	DInputs              *tensor.Tensor
+	GetBiasRegularizerL1 float64
+	GetBiasRegularizerL2 float64
 }
 
 // NewActivationSoftmax creates a new instance of ActivationSoftmax.

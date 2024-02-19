@@ -120,57 +120,32 @@ func (t *Tensor) DotProduct(other *Tensor) (*Tensor, error) {
 	return t.MatrixMultiply(other)
 }
 
-// func main() {
+// Copy creates a copy of the Tensor
+func (t *Tensor) Copy() *Tensor {
+	dataCopy := make([][]float64, len(t.Data))
+	for i := range t.Data {
+		dataCopy[i] = make([]float64, len(t.Data[i]))
+		copy(dataCopy[i], t.Data[i])
+	}
+	return NewTensor(dataCopy)
+}
 
-// 	// Example usage for 2D tensors (matrices)
-// 	inputs := NewTensor([][]float64{
-// 		{1, 2, 3, 2.5},
-// 		{2, 5, -1, 2},
-// 		{-1.5, 2.7, 3.3, -0.8},
-// 	})
-// 	// fmt.Println(inputs.Data)
-// 	weights := NewTensor([][]float64{
-// 		{0.2, 0.8, -0.5, 1.0},
-// 		{0.5, -0.91, 0.26, -0.5},
-// 		{-0.26, -0.27, 0.17, 0.87},
-// 	})
-// 	// fmt.Println(weights.Data)
-// 	biases := NewTensor([][]float64{
-// 		{2, 3, 0.5},
-// 	})
-// 	fmt.Println(biases.Data)
-
-// 	dotProduct, err := inputs.DotProduct(weights.Transpose())
-// 	if err != nil {
-// 		fmt.Println("Error calculating dot product:", err)
-// 		return
-// 	}
-// 	fmt.Println("Dot Product Shape:")
-// 	fmt.Println(dotProduct.Shape())
-// 	fmt.Println("Biases Shape:")
-// 	fmt.Println(biases.Shape())
-
-// 	// Loop through the rows of dotProduct
-// 	for i, row := range dotProduct.Data {
-// 		fmt.Printf("Row %d: %v\n", i, row)
-// 	}
-// 	fmt.Println("")
-
-// 	// forward
-
-// 	// Replicate biases to match the shape of dotProduct
-// 	replicatedBiases := reshape(biases, len(dotProduct.Data))
-
-// 	// Add biases to dotProduct
-// 	dotProductWithBiases, err := dotProduct.Add(replicatedBiases)
-// 	if err != nil {
-// 		fmt.Println("Error adding biases:", err)
-// 		return
-// 	}
-
-// 	// Print the new tensor with biases added
-// 	fmt.Println("dotProduct with biases added:")
-// 	for _, row := range dotProductWithBiases.Data {
-// 		fmt.Println(row)
-// 	}
-// }
+// Argmax returns a Tensor containing the indices of the max element in each row
+func (t *Tensor) Argmax(axis int) *Tensor {
+	if axis != 1 {
+		panic("Argmax currently only supports axis=1")
+	}
+	indices := make([][]float64, t.Rows)
+	for i, row := range t.Data {
+		maxIdx := 0
+		maxVal := row[0]
+		for j, val := range row {
+			if val > maxVal {
+				maxVal = val
+				maxIdx = j
+			}
+		}
+		indices[i] = []float64{float64(maxIdx)}
+	}
+	return NewTensor(indices)
+}
