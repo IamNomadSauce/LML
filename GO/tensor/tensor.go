@@ -61,7 +61,7 @@ func (t *Tensor) Add(other *Tensor) (*Tensor, error) {
 	return NewTensor(resultData), nil
 }
 
-func reshape(biases *Tensor, numRows int) *Tensor {
+func Reshape(biases *Tensor, numRows int) *Tensor {
 	replicatedBiasesData := make([][]float64, numRows)
 	for i := range replicatedBiasesData {
 		replicatedBiasesData[i] = make([]float64, len(biases.Data[0]))

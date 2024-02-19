@@ -1,16 +1,28 @@
-package tensor
+package nn
 
 import (
 	"fmt"
+	"go_nn/tensor"
+	_ "go_nn/tensor"
 	"math/rand"
 	"time"
 )
 
+// Layer defines the methods that neural network layers should implement.
+type Layer interface {
+	GetWeights() *tensor.Tensor
+	GetBiases() *tensor.Tensor
+	GetWeightRegularizerL1() float64
+	GetWeightRegularizerL2() float64
+	GetBiasRegularizerL1() float64
+	GetBiasRegularizerL2() float64
+}
+
 type LayerDense struct {
-	Weights  *Tensor
-	Biases   *Tensor
-	Outputs  *Tensor
-	DInputs  *Tensor
+	Weights  *tensor.Tensor
+	Biases   *tensor.Tensor
+	Outputs  *tensor.Tensor
+	DInputs  *tensor.Tensor
 	InputsN  int64
 	OutputsN int64
 }
@@ -35,8 +47,8 @@ func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
 	biasesData := make([][]float64, 1)
 	biasesData[0] = make([]float64, nOutputs) // Zeros intialization\
 
-	weights_tensor := NewTensor(weights)
-	biases_tensor := NewTensor(biasesData)
+	weights_tensor := tensor.NewTensor(weights)
+	biases_tensor := tensor.NewTensor(biasesData)
 
 	return LayerDense{
 		Weights: weights_tensor,
@@ -45,7 +57,7 @@ func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
 }
 
 // Forward Pass
-func (d *LayerDense) Forward(inputs *Tensor) {
+func (d *LayerDense) Forward(inputs *tensor.Tensor) {
 	// Calculate output values from inputs, weights and biases
 	fmt.Println("DL_Forward: Inputs\n", d.InputsN, d.OutputsN, inputs.Rows, inputs.Cols, "\n")
 	fmt.Println("DL_Forward: Weights\n", d.Weights.Data, d.Weights.Rows, d.Weights.Cols, "\n")
@@ -57,7 +69,7 @@ func (d *LayerDense) Forward(inputs *Tensor) {
 	// 	fmt.Println("Row", row)
 	// }
 	// // Replicate/Reshape biases to match the shape of dotProduct
-	replicatedBiases := reshape(d.Biases, len(dp.Data))
+	replicatedBiases := tensor.Reshape(d.Biases, len(dp.Data))
 
 	// Add biases to dot_products
 	output, _ := dp.Add(replicatedBiases)

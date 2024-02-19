@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go_nn/nn"
 	"go_nn/tensor"
 	"math/rand"
 	"time"
@@ -154,11 +155,11 @@ func main() {
 	fmt.Println("X_tensor", X_tensor.Rows, X_tensor.Cols)
 	// fmt.Println("Inputs\n", inputs.Rows, inputs.Cols, "\n")
 
-	layer := tensor.New_Dense_Layer(2, 3)
-	activation1 := tensor.New_ReLU_Activation()
+	layer := nn.New_Dense_Layer(2, 3)
+	activation1 := nn.New_ReLU_Activation()
 
-	layer2 := tensor.New_Dense_Layer(3, 3)
-	activation2 := tensor.New_Softmax_Activation()
+	layer2 := nn.New_Dense_Layer(3, 3)
+	activation2 := nn.New_Softmax_Activation()
 
 	layer.Forward(X_tensor)
 	activation1.Forward(layer.Outputs, true)
@@ -166,11 +167,11 @@ func main() {
 	layer2.Forward((activation1.Output))
 	activation2.Forward(layer2.Outputs, true)
 
-	fmt.Println("Actviation2 OUTPUT\n", activation2.Output)
+	fmt.Println("Softmax OUTPUT\n", activation2.Output.Data)
 
-	for _, row := range activation2.Output.Data {
-		fmt.Println("Activation2: ", row)
-	}
+	// for _, row := range activation2.Output.Data {
+	// 	fmt.Println("Activation2: ", row)
+	// }
 
 	// fmt.Println("Activation1\n", activation1.Inputs, "\n", activation1.Output.Data)
 

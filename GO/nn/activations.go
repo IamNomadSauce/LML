@@ -1,15 +1,17 @@
-package tensor
+package nn
 
 import (
 	"fmt"
+	"go_nn/tensor"
+	_ "go_nn/tensor"
 	"math"
 )
 
 // Activation_ReLU represents a ReLU activation layer
 type Activation_ReLU struct {
-	Inputs  *Tensor
-	Output  *Tensor
-	DInputs *Tensor
+	Inputs  *tensor.Tensor
+	Output  *tensor.Tensor
+	DInputs *tensor.Tensor
 }
 
 // New_ReLU_Activation creates a new instance of Activation_ReLU.
@@ -18,7 +20,7 @@ func New_ReLU_Activation() *Activation_ReLU {
 }
 
 // Forward performs the forward pass
-func (a *Activation_ReLU) Forward(Inputs *Tensor, training bool) {
+func (a *Activation_ReLU) Forward(Inputs *tensor.Tensor, training bool) {
 	// Remember input values
 	a.Inputs = Inputs
 	// Calculate Output values from Inputs
@@ -30,18 +32,18 @@ func (a *Activation_ReLU) Forward(Inputs *Tensor, training bool) {
 		}
 	}
 	fmt.Println("\nActivation Relu", OutputData, "\n")
-	a.Output = NewTensor(OutputData)
+	a.Output = tensor.NewTensor(OutputData)
 }
 
 // Backward performs the backward pass
-func (a *Activation_ReLU) Backward(dvalues *Tensor) {
+func (a *Activation_ReLU) Backward(dvalues *tensor.Tensor) {
 	// Make a copy of values first
 	DInputsData := make([][]float64, dvalues.Rows)
 	for i := range DInputsData {
 		DInputsData[i] = make([]float64, dvalues.Cols)
 		copy(DInputsData[i], dvalues.Data[i])
 	}
-	a.DInputs = NewTensor(DInputsData)
+	a.DInputs = tensor.NewTensor(DInputsData)
 
 	// Zero gradient where input values were negative
 	for i := range a.Inputs.Data {
@@ -59,9 +61,9 @@ func (a *Activation_ReLU) Backward(dvalues *Tensor) {
 
 // ActivationSoftmax represents a Softmax activation layer
 type ActivationSoftmax struct {
-	Inputs  *Tensor
-	Output  *Tensor
-	DInputs *Tensor
+	Inputs  *tensor.Tensor
+	Output  *tensor.Tensor
+	DInputs *tensor.Tensor
 }
 
 // NewActivationSoftmax creates a new instance of ActivationSoftmax.
@@ -70,7 +72,7 @@ func New_Softmax_Activation() *ActivationSoftmax {
 }
 
 // Forward performs the forward pass
-func (a *ActivationSoftmax) Forward(Inputs *Tensor, training bool) {
+func (a *ActivationSoftmax) Forward(Inputs *tensor.Tensor, training bool) {
 	// Remember input values
 	a.Inputs = Inputs
 	// Get unnormalized probabilities
@@ -96,11 +98,11 @@ func (a *ActivationSoftmax) Forward(Inputs *Tensor, training bool) {
 			OutputData[i][j] = expVal / expSum
 		}
 	}
-	a.Output = NewTensor(OutputData)
+	a.Output = tensor.NewTensor(OutputData)
 }
 
 // Backward performs the backward pass
-func (a *ActivationSoftmax) Backward(dvalues *Tensor) {
+func (a *ActivationSoftmax) Backward(dvalues *tensor.Tensor) {
 	// Create uninitialized array
 	DInputsData := make([][]float64, dvalues.Rows)
 	for i, singleOutput := range a.Output.Data {
@@ -124,5 +126,5 @@ func (a *ActivationSoftmax) Backward(dvalues *Tensor) {
 			}
 		}
 	}
-	a.DInputs = NewTensor(DInputsData)
+	a.DInputs = tensor.NewTensor(DInputsData)
 }
