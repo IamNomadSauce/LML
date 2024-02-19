@@ -6,73 +6,13 @@ import (
 	"math"
 )
 
-// Loss represents the common loss struct
-type Loss struct {
-	trainableLayers []Layer
-}
-
 // LossFunction represents a loss function
-// TODO May need to add 'forward'
 type LossFunction interface {
-	Calculate(output, y *tensor.Tensor, includeRegularization bool) (float64, float64)
-}
-
-// NewLoss creates a new Loss instance
-func NewLoss() *Loss {
-	return &Loss{}
-}
-
-// RememberTrainableLayers sets the trainable layers for the loss calculation
-func (l *Loss) RememberTrainableLayers(trainableLayers []Layer) {
-	l.trainableLayers = trainableLayers
-}
-
-// RegularizationLoss calculates the regularization loss
-func (l *Loss) RegularizationLoss() float64 {
-	regularizationLoss := 0.0
-
-	// Calculate regularization loss
-	for _, layer := range l.trainableLayers {
-		// L1 regularization - weights
-		if layer.GetWeightRegularizerL1() > 0 {
-			for _, row := range layer.GetWeights().Data {
-				for _, weight := range row {
-					regularizationLoss += layer.GetWeightRegularizerL1() * math.Abs(weight)
-				}
-			}
-		}
-
-		// L2 regularization - weights
-		if layer.GetWeightRegularizerL2() > 0 {
-			for _, row := range layer.GetWeights().Data {
-				for _, weight := range row {
-					regularizationLoss += layer.GetWeightRegularizerL2() * weight * weight
-				}
-			}
-		}
-
-		// L1 regularization - biases
-		if layer.GetBiasRegularizerL1() > 0 {
-			for _, bias := range layer.GetBiases().Data[0] {
-				regularizationLoss += layer.GetBiasRegularizerL1() * math.Abs(bias)
-			}
-		}
-
-		// L2 regularization - biases
-		if layer.GetBiasRegularizerL2() > 0 {
-			for _, bias := range layer.GetBiases().Data[0] {
-				regularizationLoss += layer.GetBiasRegularizerL2() * bias * bias
-			}
-		}
-	}
-
-	return regularizationLoss
+	Calculate(output, y *tensor.Tensor) float64
 }
 
 // LossCategoricalCrossentropy represents categorical cross-entropy loss
-type LossCategoricalCrossentropy struct {
-	dinputs *tensor.Tensor
-}
+type LossCategoricalCrossentropy struct{}
 
 // Forward performs the forward pass
 func (l *LossCategoricalCrossentropy) Forward(yPred, yTrue *tensor.Tensor) []float64 {
@@ -85,46 +25,55 @@ func (l *LossCategoricalCrossentropy) Forward(yPred, yTrue *tensor.Tensor) []flo
 			yPred.Data[i][j] = math.Max(1e-7, math.Min(1-1e-7, yPred.Data[i][j]))
 		}
 
-		// Probabilities for target values
+		var correctConfidences float64
 		if yTrue.Cols == 1 {
-			correctConfidences := yPred.Data[i][int(yTrue.Data[i][0])]
-			negativeLogLikelihoods[i] = -math.Log(correctConfidences)
+			correctConfidences = yPred.Data[i][int(yTrue.Data[i][0])]
 		} else {
-			correctConfidences := 0.0
 			for j := range yPred.Data[i] {
 				correctConfidences += yPred.Data[i][j] * yTrue.Data[i][j]
 			}
-			negativeLogLikelihoods[i] = -math.Log(correctConfidences)
 		}
+
+		negativeLogLikelihoods[i] = -math.Log(correctConfidences)
 	}
 
 	return negativeLogLikelihoods
 }
 
 // Backward performs the backward pass
-func (l *LossCategoricalCrossentropy) Backward(dvalues, yTrue *tensor.Tensor) {
-	samples := len(dvalues.Data)
-	labels := len(dvalues.Data[0])
+func (l *LossCategoricalCrossentropy) Backward(dvalues, yTrue *tensor.Tensor) *tensor.Tensor {
+	samples := dvalues.Rows
+	labels := dvalues.Cols
 
 	if yTrue.Cols == 1 {
-		yTrueOneHot := make([][]float64, samples)
-		for i := range yTrueOneHot {
-			yTrueOneHot[i] = make([]float64, labels)
-			yTrueOneHot[i][int(yTrue.Data[i][0])] = 1
+		yTrueOneHot := tensor.NewTensor(make([][]float64, samples))
+		for i := range yTrueOneHot.Data {
+			yTrueOneHot.Data[i] = make([]float64, labels)
+			yTrueOneHot.Data[i][int(yTrue.Data[i][0])] = 1
 		}
-		yTrue.Data = yTrueOneHot
+		yTrue = yTrueOneHot
 	}
 
-	l.dinputs = tensor.NewTensor(make([][]float64, samples))
+	dinputs := tensor.NewTensor(make([][]float64, samples))
 	for i := range dvalues.Data {
 		for j := range dvalues.Data[i] {
-			l.dinputs.Data[i][j] = -yTrue.Data[i][j] / dvalues.Data[i][j]
-			l.dinputs.Data[i][j] = l.dinputs.Data[i][j] / float64(samples)
+			dinputs.Data[i][j] = -yTrue.Data[i][j] / dvalues.Data[i][j]
+			dinputs.Data[i][j] /= float64(samples)
 		}
 	}
+
+	return dinputs
 }
 
-// -----------------
+// Calculate calculates the data loss
+func (l *LossCategoricalCrossentropy) Calculate(output, y *tensor.Tensor) float64 {
+	// Implementation of categorical cross-entropy loss calculation
+	// Placeholder implementation - replace with actual logic
+	return 0.0
+}
+
+// -------------------------------
+
 // ActivationSoftmaxLossCategoricalCrossentropy represents a combined softmax activation
 // and categorical cross-entropy loss for faster backward step
 type ActivationSoftmaxLossCategoricalCrossentropy struct {
@@ -138,8 +87,8 @@ func NewActivationSoftmaxLossCategoricalCrossentropy() *ActivationSoftmaxLossCat
 
 // Backward performs the backward pass
 func (a *ActivationSoftmaxLossCategoricalCrossentropy) Backward(dvalues, yTrue *tensor.Tensor) {
-	// Number of samples
 	samples := len(dvalues.Data)
+
 	// If labels are one-hot encoded, turn them into discrete values
 	if yTrue.Cols > 1 {
 		yTrue = yTrue.Argmax(1)
@@ -149,15 +98,63 @@ func (a *ActivationSoftmaxLossCategoricalCrossentropy) Backward(dvalues, yTrue *
 	a.dinputs = dvalues.Copy()
 	// Calculate gradient
 	for i, label := range yTrue.Data {
-		labelIndex := int(label[0]) // Convert label[0] from float64 to int
-		a.dinputs.Data[i][labelIndex] -= 1
+		a.dinputs.Data[i][int(label[0])] -= 1
 	}
+
 	// Normalize gradient
 	for i := range a.dinputs.Data {
 		for j := range a.dinputs.Data[i] {
 			a.dinputs.Data[i][j] /= float64(samples)
 		}
 	}
+}
+
+// ---------------------------------------------------------
+
+// CalculateRegularizationLoss calculates the regularization loss for all trainable layers
+func CalculateRegularizationLoss(trainableLayers []TrainableLayer) float64 {
+	regularizationLoss := 0.0
+	for _, layer := range trainableLayers {
+		// L1 regularization - weights
+		if reg := layer.GetWeightRegularizerL1(); reg > 0 {
+			regularizationLoss += reg * sumAbs(layer.GetWeights())
+		}
+		// L2 regularization - weights
+		if reg := layer.GetWeightRegularizerL2(); reg > 0 {
+			regularizationLoss += reg * sumSquares(layer.GetWeights())
+		}
+		// L1 regularization - biases
+		if reg := layer.GetBiasRegularizerL1(); reg > 0 {
+			regularizationLoss += reg * sumAbs(layer.GetBiases())
+		}
+		// L2 regularization - biases
+		if reg := layer.GetBiasRegularizerL2(); reg > 0 {
+			regularizationLoss += reg * sumSquares(layer.GetBiases())
+		}
+	}
+	return regularizationLoss
+}
+
+// sumAbs calculates the sum of absolute values in a tensor
+func sumAbs(t *tensor.Tensor) float64 {
+	sum := 0.0
+	for _, row := range t.Data {
+		for _, val := range row {
+			sum += math.Abs(val)
+		}
+	}
+	return sum
+}
+
+// sumSquares calculates the sum of squares in a tensor
+func sumSquares(t *tensor.Tensor) float64 {
+	sum := 0.0
+	for _, row := range t.Data {
+		for _, val := range row {
+			sum += val * val
+		}
+	}
+	return sum
 }
 
 // Calculate calculates the data and regularization losses

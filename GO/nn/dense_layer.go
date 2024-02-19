@@ -8,33 +8,6 @@ import (
 	"time"
 )
 
-// Layer defines the methods that neural network layers should implement.
-type Layer interface {
-	GetWeights() *tensor.Tensor
-	GetBiases() *tensor.Tensor
-	Forward(inputs *tensor.Tensor, training bool)
-	Backward(dvalues *tensor.Tensor)
-	GetBiasRegularizerL1() float64 // TODO will probably have to swap these out with Tensor types
-	GetBiasRegularizerL2() float64
-	GetWeightRegularizerL1() float64
-	GetWeightRegularizerL2() float64
-}
-
-type LayerDense struct {
-	Weights               *tensor.Tensor
-	Biases                *tensor.Tensor
-	Outputs               *tensor.Tensor
-	DInputs               *tensor.Tensor
-	InputsN               int64
-	OutputsN              int64
-	DWeights              *tensor.Tensor
-	DBiases               *tensor.Tensor
-	Weight_Regularizer_L1 float64
-	Weight_Regularizer_L2 float64
-	Bias_Regularizer_L1   float64
-	Bias_Regularizer_L2   float64
-}
-
 func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
 	fmt.Println("New Dense Layer", nInputs, nOutputs)
 
@@ -156,18 +129,3 @@ func (l *LayerDense) Backward(dvalues *tensor.Tensor) {
 }
 
 // ------------
-
-// LayerInput represents an input layer
-type LayerInput struct {
-	Output *tensor.Tensor
-}
-
-// NewLayerInput creates a new instance of LayerInput
-func NewLayerInput() *LayerInput {
-	return &LayerInput{}
-}
-
-// Forward performs the forward pass
-func (l *LayerInput) Forward(inputs *tensor.Tensor, training bool) {
-	l.Output = inputs
-}
