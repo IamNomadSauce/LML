@@ -10,6 +10,7 @@ type LayerDense struct {
 	Weights  *Tensor
 	Biases   *Tensor
 	Outputs  *Tensor
+	DInputs  *Tensor
 	InputsN  int64
 	OutputsN int64
 }

@@ -155,16 +155,32 @@ func main() {
 	// fmt.Println("Inputs\n", inputs.Rows, inputs.Cols, "\n")
 
 	layer := tensor.New_Dense_Layer(2, 3)
-	layer2 := tensor.New_Dense_Layer(3, 1)
-	// fmt.Println("Layer Weights:\n", layer.Weights.Rows, layer.Weights.Cols, "\n")
-	// fmt.Println("Layer Biases:\n", layer.Biases.Rows, layer.Biases.Cols, "\n")
+	activation1 := tensor.New_ReLU_Activation()
+
+	layer2 := tensor.New_Dense_Layer(3, 3)
+	activation2 := tensor.New_Softmax_Activation()
 
 	layer.Forward(X_tensor)
-	fmt.Println("Main: Layer1 Forward", layer.Outputs.Rows, layer.Outputs.Cols)
+	activation1.Forward(layer.Outputs, true)
 
-	layer2.Forward(layer.Outputs)
+	layer2.Forward((activation1.Output))
+	activation2.Forward(layer2.Outputs, true)
 
-	fmt.Println("Main: Layer Forward", layer2.Outputs.Rows, layer2.Outputs.Cols)
+	fmt.Println("Actviation2 OUTPUT\n", activation2.Output)
+
+	for _, row := range activation2.Output.Data {
+		fmt.Println("Activation2: ", row)
+	}
+
+	// fmt.Println("Activation1\n", activation1.Inputs, "\n", activation1.Output.Data)
+
+	// layer2 := tensor.New_Dense_Layer(3, 1)
+
+	// fmt.Println("Main: Layer1 Forward", layer.Outputs.Rows, layer.Outputs.Cols)
+
+	// layer2.Forward(layer.Outputs)
+
+	// fmt.Println("Main: Layer Forward", layer2.Outputs.Rows, layer2.Outputs.Cols)
 
 }
 
