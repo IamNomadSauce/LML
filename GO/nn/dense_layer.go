@@ -19,12 +19,18 @@ type Layer interface {
 }
 
 type LayerDense struct {
-	Weights  *tensor.Tensor
-	Biases   *tensor.Tensor
-	Outputs  *tensor.Tensor
-	DInputs  *tensor.Tensor
-	InputsN  int64
-	OutputsN int64
+	Weights               *tensor.Tensor
+	Biases                *tensor.Tensor
+	Outputs               *tensor.Tensor
+	DInputs               *tensor.Tensor
+	InputsN               int64
+	OutputsN              int64
+	DWeights              *tensor.Tensor
+	DBiases               *tensor.Tensor
+	Weight_Regularizer_L1 float64
+	Weight_Regularizer_L2 float64
+	Bias_Regularizer_L1   float64
+	Bias_Regularizer_L2   float64
 }
 
 func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
@@ -82,3 +88,67 @@ func (d *LayerDense) Forward(inputs *tensor.Tensor) {
 }
 
 // Backward Pass
+// Backward performs the backward pass
+func (l *LayerDense) Backward(dvalues *tensor.Tensor) {
+	// Gradients on parameters
+	l.DWeights, _ = l.Outputs.Transpose().DotProduct(dvalues)
+	l.DBiases = tensor.NewTensor([][]float64{{0}}) // Initialize DBiases with zeros
+	for i := 0; i < dvalues.Rows; i++ {
+		for j := 0; j < dvalues.Cols; j++ {
+			l.DBiases.Data[0][j] += dvalues.Data[i][j]
+		}
+	}
+
+	// Gradients on regularization
+	// L1 on weights
+	if l.Weight_Regularizer_L1 > 0 {
+		dL1 := make([][]float64, l.Weights.Rows)
+		for i := range dL1 {
+			dL1[i] = make([]float64, l.Weights.Cols)
+			for j := range dL1[i] {
+				if l.Weights.Data[i][j] < 0 {
+					dL1[i][j] = -1
+				} else {
+					dL1[i][j] = 1
+				}
+			}
+		}
+		dL1Tensor := tensor.NewTensor(dL1)
+		l.DWeights, _ = l.DWeights.Add(dL1Tensor)
+	}
+	// L2 on Weights
+	if l.Weight_Regularizer_L2 > 0 {
+		for i := range l.Weights.Data {
+			for j := range l.Weights.Data[i] {
+				l.DWeights.Data[i][j] += 2 * l.Weight_Regularizer_L2 * l.Weights.Data[i][j]
+			}
+		}
+	}
+	// L1 on biases
+	if l.Bias_Regularizer_L1 > 0 {
+		dL1 := make([][]float64, l.Biases.Rows)
+		for i := range dL1 {
+			dL1[i] = make([]float64, l.Biases.Cols)
+			for j := range dL1[i] {
+				if l.Biases.Data[i][j] < 0 {
+					dL1[i][j] = -1
+				} else {
+					dL1[i][j] = 1
+				}
+			}
+		}
+		dL1Tensor := tensor.NewTensor(dL1)
+		l.DBiases, _ = l.DBiases.Add(dL1Tensor)
+	}
+	// L2 on Biases
+	if l.Bias_Regularizer_L2 > 0 {
+		for i := range l.Biases.Data {
+			for j := range l.Biases.Data[i] {
+				l.DBiases.Data[i][j] += 2 * l.Bias_Regularizer_L2 * l.Biases.Data[i][j]
+			}
+		}
+	}
+
+	// Gradient on values
+	l.DInputs, _ = dvalues.DotProduct(l.Weights.Transpose())
+}
