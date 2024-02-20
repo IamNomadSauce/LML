@@ -66,6 +66,7 @@ type ActivationSoftmax struct {
 	DInputs              *tensor.Tensor
 	GetBiasRegularizerL1 float64
 	GetBiasRegularizerL2 float64
+	Layer
 }
 
 // NewActivationSoftmax creates a new instance of ActivationSoftmax.

@@ -8,6 +8,53 @@ import (
 	"time"
 )
 
+// Layer defines the methods that all neural network layers should implement.
+type Layer interface {
+	Forward(inputs *tensor.Tensor, training bool)
+	Backward(dvalues *tensor.Tensor)
+	SetPrev(layer Layer)
+	SetNext(layer Layer)
+}
+
+// TrainableLayer defines methods for layers with trainable parameters.
+type TrainableLayer interface {
+	Layer
+	GetWeights() *tensor.Tensor
+	GetBiases() *tensor.Tensor
+	GetWeightRegularizerL1() float64
+	GetWeightRegularizerL2() float64
+	GetBiasRegularizerL1() float64
+	GetBiasRegularizerL2() float64
+}
+
+type LayerDense struct {
+	Weights               *tensor.Tensor
+	Biases                *tensor.Tensor
+	Outputs               *tensor.Tensor
+	DInputs               *tensor.Tensor
+	InputsN               int64
+	OutputsN              int64
+	DWeights              *tensor.Tensor
+	DBiases               *tensor.Tensor
+	Weight_Regularizer_L1 float64
+	Weight_Regularizer_L2 float64
+	Bias_Regularizer_L1   float64
+	Bias_Regularizer_L2   float64
+}
+
+// LayerInput represents an input layer
+type LayerInput struct {
+	Output *tensor.Tensor
+	// GetWeightRegularizerL1 float64
+	// GetWeightRegularizerL2 float64
+	// GetBiasRegularizerL1   float64
+	// GetBiasRegularizerL2   float64
+}
+
+// NewLayerInput creates a new instance of LayerInput
+func NewLayerInput() *LayerInput {
+	return &LayerInput{}
+}
 func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
 	fmt.Println("New Dense Layer", nInputs, nOutputs)
 
