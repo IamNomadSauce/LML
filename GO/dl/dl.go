@@ -94,10 +94,10 @@ func generatePointLabels(num int) ([][]float64, [][]float64, [][]float64, [][]fl
 }
 
 // generateUpdownData generates data points based on whether one number is less than another, normalizes the data, and splits it into training and test sets.
-func GenerateUpdownData(num int) ([][]float64, []float64, [][]float64, []float64) {
+func GenerateUpdownData(num int) ([][]float64, [][]float64, [][]float64, [][]float64) {
 	rand.Seed(time.Now().UnixNano())
 	inputs := make([][]float64, num)
-	outputs := make([]float64, num)
+	outputs := make([][]float64, num)
 	for i := 0; i < num; i++ {
 		a := float64(rand.Intn(100000) + 1)
 		b := float64(rand.Intn(100000) + 1)
@@ -106,7 +106,7 @@ func GenerateUpdownData(num int) ([][]float64, []float64, [][]float64, []float64
 			c = 1.0
 		}
 		inputs[i] = []float64{a, b, c}
-		outputs[i] = c
+		outputs[i] = []float64{c}
 	}
 
 	// Calculate mean and range for normalization

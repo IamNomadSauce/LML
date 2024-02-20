@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"go_nn/dl"
 	_ "go_nn/dl"
+	"go_nn/nn"
 	_ "go_nn/nn"
 	"go_nn/tensor"
 	"math/rand"
@@ -36,14 +36,14 @@ func main() {
 	// }
 
 	X, y, X_test, y_test := dl.GenerateUpdownData(100)
-	X_tensor, y_tensor, X_test_tensor, y_test_tensor := tensor.NewTensor(X), tensor.NewTensor(y), tensor.NewTensor(X_test), tensor.NewTensor(y_test)
+	X_tensor, y_tensor := tensor.NewTensor(X), tensor.NewTensor(y)
+	X_test_tensor, y_test_tensor := tensor.NewTensor(X_test), tensor.NewTensor(y_test)
 
-	fmt.Println(X_tensor, y, X_test, y_test)
+	// fmt.Println(X_tensor.Data, y_tensor.Data, X_test_tensor.Data, y_test_tensor.Data)
 
-	// model := nn.NewModel()
+	model := nn.NewModel()
 
-	// model.Train(X_tensor)
-	// fmt.Println(trained)
+	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 100)
 
 	// // inputs := gen_data(100)
 	// for _, row := range X_tensor.Data {

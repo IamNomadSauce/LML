@@ -22,6 +22,6 @@ func NewModel() *Model {
 
 // c CreateModel
 
-func (net *Model) Train(X, y *tensor.Tensor, epochs int) {
+func (net *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 	fmt.Println("Train the Model", X, y)
 }
