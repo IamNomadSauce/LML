@@ -41,7 +41,7 @@ func main() {
 
 	// fmt.Println(X_tensor.Data, y_tensor.Data, X_test_tensor.Data, y_test_tensor.Data)
 
-	model := nn.NewModel()
+	model := nn.NewModel(3, 10, 1, 0.01)
 
 	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 100)
 
