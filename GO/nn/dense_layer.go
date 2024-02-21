@@ -87,8 +87,8 @@ func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
 // Forward Pass
 func (d *LayerDense) Forward(inputs *tensor.Tensor) {
 	// Calculate output values from inputs, weights and biases
-	fmt.Println("DL_Forward: Inputs\n", d.InputsN, d.OutputsN, inputs.Rows, inputs.Cols, "\n")
-	fmt.Println("DL_Forward: Weights\n", d.Weights.Data, d.Weights.Rows, d.Weights.Cols, "\n")
+	// fmt.Println("DL_Forward: Inputs\n", d.InputsN, d.OutputsN, inputs.Rows, inputs.Cols, "\n")
+	// fmt.Println("DL_Forward: Weights\n", d.Weights.Rows, d.Weights.Cols, "\n")
 
 	// Perform the dot_product on the inputs using weights
 	dp, _ := inputs.DotProduct(d.Weights)
@@ -102,11 +102,11 @@ func (d *LayerDense) Forward(inputs *tensor.Tensor) {
 	// Add biases to dot_products
 	output, _ := dp.Add(replicatedBiases)
 	d.Outputs = output
-	fmt.Println("DL: Dot_Product + Biases")
-	for _, row := range output.Data {
-		fmt.Println("Row", row)
-	}
-	fmt.Println("d.Outputs:", d.Outputs.Rows, d.Outputs.Cols, "\n")
+	// fmt.Println("DL: Dot_Product + Biases")
+	// for _, row := range output.Data {
+	// 	fmt.Println("Row", row)
+	// }
+	// fmt.Println("d.Outputs:", d.Outputs.Rows, d.Outputs.Cols, "\n")
 }
 
 // Backward Pass

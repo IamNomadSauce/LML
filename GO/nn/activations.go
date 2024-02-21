@@ -76,8 +76,11 @@ func New_Softmax_Activation() *ActivationSoftmax {
 
 // Forward performs the forward pass
 func (a *ActivationSoftmax) Forward(Inputs *tensor.Tensor, training bool) {
+	fmt.Println("Activation Softmax Forward")
 	// Remember input values
 	a.Inputs = Inputs
+
+	// fmt.Println("Activation Inputs", Inputs)
 	// Get unnormalized probabilities
 	OutputData := make([][]float64, Inputs.Rows)
 	for i, row := range Inputs.Data {

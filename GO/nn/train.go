@@ -8,45 +8,47 @@ import (
 )
 
 type Model struct {
-	N_Input       int
-	N_Hidden      int
-	N_Outputs     int
-	HiddenLayer   LayerDense
-	OutputLayer   LayerDense
-	Learning_Rate float64
+	InputLayer      LayerDense
+	InputActivation *Activation_ReLU
+	// DropoutLayer        *LayerDropout // Placeholder for dropout layer.
+	OutputLayer      LayerDense
+	OutputActivation *ActivationSoftmax // Corrected type for softmax activation
+	Learning_Rate    float64
+	Loss             LossFunction
 }
 
 func NewModel(nInput, nHidden, nOutputs int, learningRate float64) *Model {
-	// Initialize the hidden and output layers
-	hiddenLayer := New_Dense_Layer(int64(nInput), int64(nHidden))
+	inputLayer := New_Dense_Layer(int64(nInput), int64(nHidden))
+	inputActivation := New_ReLU_Activation()
+	// dropoutLayer := New_Dropout_Layer() // Placeholder, initialize with appropriate parameters
 	outputLayer := New_Dense_Layer(int64(nHidden), int64(nOutputs))
+	outputActivation := New_Softmax_Activation() // Corrected function name for softmax activation
 
 	return &Model{
-		N_Input:       nInput,
-		N_Hidden:      nHidden,
-		N_Outputs:     nOutputs,
-		HiddenLayer:   hiddenLayer,
-		OutputLayer:   outputLayer,
-		Learning_Rate: learningRate,
+		InputLayer:      inputLayer,
+		InputActivation: inputActivation,
+		// DropoutLayer:        dropoutLayer,
+		OutputLayer:      outputLayer,
+		OutputActivation: outputActivation,
+		Learning_Rate:    learningRate,
 	}
 }
 
-func (net *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
+func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 	fmt.Println("Training the Model")
-
 	for epoch := 1; epoch <= epochs; epoch++ {
-		// Forward pass through the hidden layer
-		net.HiddenLayer.Forward(X)
+		// Forward pass through each layer and activation
+		m.InputLayer.Forward(X)
+		m.InputActivation.Forward(m.InputLayer.Outputs, true)
+		// Apply dropout here
+		// m.DropoutLayer.Forward(m.InputActivation.Output, true) // Placeholder for dropout forward pass
+		// m.OutputLayer.Forward(m.DropoutLayer.Output) // Assuming dropout layer has an Output field
+		m.OutputActivation.Forward(m.InputActivation.Output, true) // Assuming softmax activation has a Forward method
+		fmt.Println("Output Activation", m.OutputActivation.Output)
+		// Calculate loss (not shown here)
+		// Backward pass and optimization (not shown here)
 
-		// Forward pass through the output layer
-		net.OutputLayer.Forward(net.HiddenLayer.Outputs)
-
-		// Here you would calculate the loss and perform a backward pass and update weights
-		// This part is omitted for brevity
-
-		// Example of accessing the output of the network
-		output := net.OutputLayer.Outputs
-		fmt.Printf("Epoch %d: Output\n", epoch, output.Data)
+		fmt.Printf("Epoch %d: Training...\n", epoch)
 	}
 }
 

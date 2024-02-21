@@ -46,7 +46,7 @@ func (t *Tensor) Transpose() *Tensor {
 
 // Add performs element-wise addition with another tensor and returns a new tensor
 func (t *Tensor) Add(other *Tensor) (*Tensor, error) {
-	fmt.Println("\nAdd\nT:\n", t.Rows, t.Cols, "\nOther:\n", other.Rows, other.Cols)
+	// fmt.Println("\nAdd\nT:\n", t.Rows, t.Cols, "\nOther:\n", other.Rows, other.Cols)
 	if t.Rows != other.Rows || t.Cols != other.Cols {
 		fmt.Println("Tensors Have Different Shapes!\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 		return nil, fmt.Errorf("tensors have different shapes")
@@ -74,7 +74,7 @@ func Reshape(biases *Tensor, numRows int) *Tensor {
 
 // MatrixMultiply performs matrix multiplication with another tensor and returns a new tensor
 func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
-	fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
+	// fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 
 	if t.Cols != other.Rows {
 
@@ -82,7 +82,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 		return nil, fmt.Errorf("incompatible shapes for matrix multiplication")
 	}
 	resultData := make([][]float64, t.Rows)
-	fmt.Println("Tensor-Matrix_Multiply")
+	// fmt.Println("Tensor-Matrix_Multiply")
 
 	// TODO Implement gonum?
 	for i := range resultData {
@@ -95,7 +95,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 		}
 	}
 	rs := NewTensor(resultData)
-	fmt.Println("MatMul Results\n", rs.Rows, rs.Cols, "\n")
+	// fmt.Println("MatMul Results\n", rs.Rows, rs.Cols, "\n")
 	return rs, nil
 }
 
@@ -103,7 +103,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 // For 1D tensors, it calculates the sum of the products of corresponding elements.
 // For 2D tensors, it performs matrix multiplication.
 func (t *Tensor) DotProduct(other *Tensor) (*Tensor, error) {
-	fmt.Println("\nTrensor DotProduct\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
+	// fmt.Println("\nTrensor DotProduct\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 	// Check if both tensors are vectors (1D)
 	if t.Cols == 1 && other.Cols == 1 && t.Rows == len(other.Data) {
 		resultData := make([][]float64, 1)
