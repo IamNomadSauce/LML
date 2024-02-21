@@ -27,7 +27,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class BinaryClassifier(nn.Module):
     def __init__(self):
         super(BinaryClassifier, self).__init__()
-        self.hidden = nn.Linear(2, 10)  # 5 input features (o, h, l, c, t)
+        self.hidden = nn.Linear(4, 10)  # 5 input features (o, h, l, c, t)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.5)
         self.output = nn.Linear(10, 1)
@@ -44,7 +44,7 @@ class Multi_Classifier(nn.Module):
         super(Multi_Classifier, self).__init__()
         self.layer_1 = nn.Linear(in_features=3, out_features=64)
         self.layer_2 = nn.Linear(in_features=64, out_features=32) # extra layer
-        self.layer_3 = nn.Linear(in_features=32, out_features=4)
+        self.layer_3 = nn.Linear(in_features=32, out_features=1)
     
     def forward(self, x):
         return self.layer_3(self.layer_2(self.layer_1(x)))
@@ -207,7 +207,7 @@ if args.train:
     # Train the model
     print("TRAIN")
     # test_data = data_loader.generate_updown_data(10000000, 32)
-    test_data = data_loader.generate_point_labels(1000)
+    test_data = data_loader.generate_updown_data(1000, 1)
 
     print(f"{test_data}")
     train(model=model, data=test_data, optimizer=optimizer)
