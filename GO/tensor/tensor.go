@@ -26,6 +26,18 @@ func NewTensor(data [][]float64) *Tensor {
 	return &Tensor{Data: data, Rows: rows, Cols: cols}
 }
 
+// Zero-filled Tensor
+func NewZerosTensor(inputN, outputN int) *Tensor {
+	// Iterate over each element in the outer slice
+	sliceOfSlices := make([][]float64, inputN)
+	for i := range sliceOfSlices {
+		// Initialize each inner slice with length y, filled with zeros
+		sliceOfSlices[i] = make([]float64, outputN)
+	}
+
+	return NewTensor(sliceOfSlices)
+}
+
 // Shape returns the shape of the tensor as {rows, columns}
 func (t *Tensor) Shape() (int, int) {
 	fmt.Println("Tensor", t)
@@ -44,21 +56,32 @@ func (t *Tensor) Transpose() *Tensor {
 	return NewTensor(transposedData)
 }
 
-// Add performs element-wise addition with another tensor and returns a new tensor
+// Add performs element-wise addition with another tensor and returns a new tensor.
+// This version includes a simple form of broadcasting for bias addition.
 func (t *Tensor) Add(other *Tensor) (*Tensor, error) {
-	// fmt.Println("\nAdd\nT:\n", t.Rows, t.Cols, "\nOther:\n", other.Rows, other.Cols)
-	if t.Rows != other.Rows || t.Cols != other.Cols {
-		fmt.Println("Tensors Have Different Shapes!\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
-		return nil, fmt.Errorf("tensors have different shapes")
-	}
-	resultData := make([][]float64, t.Rows)
-	for i := range resultData {
-		resultData[i] = make([]float64, t.Cols)
-		for j := range resultData[i] {
-			resultData[i][j] = t.Data[i][j] + other.Data[i][j]
+	if t.Rows == other.Rows && t.Cols == other.Cols {
+		// Shapes match, perform regular element-wise addition
+		resultData := make([][]float64, t.Rows)
+		for i := range resultData {
+			resultData[i] = make([]float64, t.Cols)
+			for j := range resultData[i] {
+				resultData[i][j] = t.Data[i][j] + other.Data[i][j]
+			}
 		}
+		return NewTensor(resultData), nil
+	} else if other.Rows == 1 && other.Cols == t.Cols {
+		// Attempt to broadcast other tensor (bias) across the rows of t
+		resultData := make([][]float64, t.Rows)
+		for i := range resultData {
+			resultData[i] = make([]float64, t.Cols)
+			for j := range resultData[i] {
+				resultData[i][j] = t.Data[i][j] + other.Data[0][j]
+			}
+		}
+		return NewTensor(resultData), nil
+	} else {
+		return nil, fmt.Errorf("tensors have different shapes and cannot be broadcasted")
 	}
-	return NewTensor(resultData), nil
 }
 
 func Reshape(biases *Tensor, numRows int) *Tensor {
@@ -116,7 +139,7 @@ func (t *Tensor) DotProduct(other *Tensor) (*Tensor, error) {
 	}
 
 	// Otherwise, perform matrix multiplication (2D tensors)
-	fmt.Println("Tensor- Dot_Product: Send to MatMul")
+	// fmt.Println("Tensor- Dot_Product: Send to MatMul")
 	return t.MatrixMultiply(other)
 }
 

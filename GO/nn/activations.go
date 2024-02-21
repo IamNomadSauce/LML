@@ -5,7 +5,13 @@ import (
 	"go_nn/tensor"
 	_ "go_nn/tensor"
 	"math"
+	"math/rand"
+	"time"
 )
+
+// ----------------------------------------------------------------
+// ReLU Activation
+// ----------------------------------------------------------------
 
 // Activation_ReLU represents a ReLU activation layer
 type Activation_ReLU struct {
@@ -31,7 +37,7 @@ func (a *Activation_ReLU) Forward(Inputs *tensor.Tensor, training bool) {
 			OutputData[i][j] = math.Max(0, Inputs.Data[i][j])
 		}
 	}
-	fmt.Println("\nActivation Relu", OutputData, "\n")
+	// fmt.Println("\nActivation Relu", OutputData, "\n")
 	a.Output = tensor.NewTensor(OutputData)
 }
 
@@ -133,4 +139,108 @@ func (a *ActivationSoftmax) Backward(dvalues *tensor.Tensor) {
 		}
 	}
 	a.DInputs = tensor.NewTensor(DInputsData)
+}
+
+// ----------------------------------------------------------------
+// Sigmoid
+// ----------------------------------------------------------------
+
+// ActivationSigmoid represents a Sigmoid activation layer
+type ActivationSigmoid struct {
+	Inputs *tensor.Tensor
+	Output *tensor.Tensor
+}
+
+// NewSigmoidActivation creates a new instance of ActivationSigmoid.
+func NewSigmoidActivation() *ActivationSigmoid {
+	return &ActivationSigmoid{}
+}
+
+// Forward performs the forward pass
+func (a *ActivationSigmoid) Forward(inputs *tensor.Tensor, training bool) {
+	// Remember input values
+	a.Inputs = inputs
+	// Calculate Output values from Inputs
+	outputData := make([][]float64, len(inputs.Data))
+	for i, row := range inputs.Data {
+		outputData[i] = make([]float64, len(row))
+		for j, val := range row {
+			outputData[i][j] = 1 / (1 + math.Exp(-val))
+		}
+	}
+	a.Output = tensor.NewTensor(outputData)
+}
+
+type LinearLayer struct {
+	Weights *tensor.Tensor
+	Biases  *tensor.Tensor
+}
+
+// ----------------------------------------------------------------
+// Linear
+// ----------------------------------------------------------------
+
+// NewLinearLayer creates a new linear layer with given input and output sizes
+func NewLinearLayer(inputDim, outputDim int, inputs *tensor.Tensor) *LinearLayer {
+	fmt.Println("\nNew Linear Layer", inputDim, outputDim)
+
+	// Initialize weights with Xavier initialization
+	weightsData := XavierInit(outputDim, inputDim)
+	weights := tensor.NewTensor(weightsData)
+
+	// Initialize biases with zeros
+	biasesData := make([][]float64, outputDim)
+	for i := range biasesData {
+		biasesData[i] = make([]float64, 1) // Only one bias per output unit
+	}
+	biases := tensor.NewTensor(biasesData)
+
+	fmt.Println("Weights:", weights.Data, "\n", weights.Rows, weights.Cols, "\nBiases", biases.Data, "\n", biases.Rows, biases.Cols)
+
+	return &LinearLayer{Weights: weights, Biases: biases}
+}
+
+// Forward performs the forward pass
+func (l *LinearLayer) Forward(input *tensor.Tensor) *tensor.Tensor {
+	// Perform matrix multiplication between input and weights
+	fmt.Println("\nLinear_Layer Forward", input.Rows, input.Cols)
+	output, err := input.MatrixMultiply(l.Weights)
+	// for _, row := range output.Data {
+	// 	fmt.Println("Row", row)
+	// }
+	fmt.Println("LL-Forward-Outputs", output.Rows, output.Cols)
+	if err != nil {
+		fmt.Println("Error during forward pass matrix multiplication:", err)
+		return nil
+	}
+
+	// Add biases to the result of the matrix multiplication
+	output, err = output.Add(l.Biases)
+	if err != nil {
+		fmt.Println("Error during forward pass bias addition:", err)
+		return nil
+	}
+
+	return output
+}
+
+// -------
+
+// XavierInit initializes a slice of slices with Xavier/Glorot uniform distribution
+// inputDim is the number of input units, outputDim is the number of output units
+func XavierInit(inputDim, outputDim int) [][]float64 {
+	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
+
+	lower := -math.Sqrt(6.0 / float64(inputDim+outputDim))
+	upper := math.Sqrt(6.0 / float64(inputDim+outputDim))
+	weights := make([][]float64, outputDim)
+
+	for i := range weights {
+		weights[i] = make([]float64, inputDim)
+		for j := range weights[i] {
+			weights[i][j] = lower + rand.Float64()*(upper-lower) // U(-sqrt(6/(n_in+n_out)), sqrt(6/(n_in+n_out)))
+		}
+	}
+
+	return weights
 }

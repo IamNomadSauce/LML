@@ -8,43 +8,51 @@ import (
 )
 
 type Model struct {
-	InputLayer      LayerDense
-	InputActivation *Activation_ReLU
-	// DropoutLayer        *LayerDropout // Placeholder for dropout layer.
-	OutputLayer      LayerDense
-	OutputActivation *ActivationSoftmax // Corrected type for softmax activation
+	InputLayer       LayerDense
+	InputActivation  *Activation_ReLU
+	OutputLayer      *LinearLayer
+	OutputActivation *ActivationSoftmax
 	Learning_Rate    float64
 	Loss             LossFunction
 }
 
 func NewModel(nInput, nHidden, nOutputs int, learningRate float64) *Model {
+	// Dense Layer
 	inputLayer := New_Dense_Layer(int64(nInput), int64(nHidden))
+	// Relu Activation
 	inputActivation := New_ReLU_Activation()
-	// dropoutLayer := New_Dropout_Layer() // Placeholder, initialize with appropriate parameters
-	outputLayer := New_Dense_Layer(int64(nHidden), int64(nOutputs))
-	outputActivation := New_Softmax_Activation() // Corrected function name for softmax activation
+	// Linear output
+	linearLayer := NewLinearLayer(nHidden, nOutputs, inputActivation.Output) // Create the linear layer
+	fmt.Println(linearLayer)
 
 	return &Model{
 		InputLayer:      inputLayer,
 		InputActivation: inputActivation,
-		// DropoutLayer:        dropoutLayer,
-		OutputLayer:      outputLayer,
-		OutputActivation: outputActivation,
-		Learning_Rate:    learningRate,
+		OutputLayer:     linearLayer, // Set the linear layer as the output layer
+		Learning_Rate:   learningRate,
 	}
 }
 
 func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
-	fmt.Println("Training the Model")
+	fmt.Println("\nTraining the Model\n")
 	for epoch := 1; epoch <= epochs; epoch++ {
-		// Forward pass through each layer and activation
+
+		fmt.Println("FORWARD-Inputs Layer", X.Rows, X.Cols)
+		// Forward pass through input layer and activation
 		m.InputLayer.Forward(X)
+		fmt.Println("FORWARD-DenseLayer", m.InputLayer.Outputs.Rows, m.InputLayer.Outputs.Cols)
+
+		// Forward pass through ReLU activation layer
 		m.InputActivation.Forward(m.InputLayer.Outputs, true)
-		// Apply dropout here
-		// m.DropoutLayer.Forward(m.InputActivation.Output, true) // Placeholder for dropout forward pass
-		// m.OutputLayer.Forward(m.DropoutLayer.Output) // Assuming dropout layer has an Output field
-		m.OutputActivation.Forward(m.InputActivation.Output, true) // Assuming softmax activation has a Forward method
-		fmt.Println("Output Activation", m.OutputActivation.Output)
+		fmt.Println("FORWARD ReLU Forward", m.InputActivation.Output.Rows, m.InputActivation.Output.Cols)
+
+		// Forward pass through output layer (linear layer)
+		output := m.OutputLayer.Forward(m.InputLayer.Outputs)
+		fmt.Println("Model Train Linear Layer Forward", output)
+
+		// Apply softmax activation
+		// m.OutputActivation.Forward(output, true)
+
 		// Calculate loss (not shown here)
 		// Backward pass and optimization (not shown here)
 

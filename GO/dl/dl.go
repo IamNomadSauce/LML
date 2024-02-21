@@ -105,14 +105,14 @@ func GenerateUpdownData(num int) ([][]float64, [][]float64, [][]float64, [][]flo
 		if a < b {
 			c = 1.0
 		}
-		inputs[i] = []float64{a, b, c}
+		inputs[i] = []float64{a, b}
 		outputs[i] = []float64{c}
 	}
 
 	// Calculate mean and range for normalization
-	meanVals := make([]float64, 3)
-	rangeVals := make([]float64, 3)
-	for i := 0; i < 3; i++ {
+	meanVals := make([]float64, 2)
+	rangeVals := make([]float64, 2)
+	for i := 0; i < 2; i++ {
 		col := make([]float64, num)
 		for j := 0; j < num; j++ {
 			col[j] = inputs[j][i]
