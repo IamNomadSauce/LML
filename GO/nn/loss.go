@@ -1,6 +1,7 @@
 package nn
 
 import (
+	"fmt"
 	_ "fmt"
 	"go_nn/tensor"
 	"math"
@@ -9,6 +10,28 @@ import (
 // LossFunction represents a loss function
 type LossFunction interface {
 	Calculate(output, y *tensor.Tensor) float64
+}
+
+// BCEWithLogitsLoss calculates the binary cross-entropy loss with logits
+func BCEWithLogitsLoss(predictions, targets *tensor.Tensor) (float64, error) {
+	if predictions.Rows != targets.Rows || predictions.Cols != targets.Cols {
+		return 0, fmt.Errorf("predictions and targets have different shapes")
+	}
+
+	loss := 0.0
+	for i := 0; i < predictions.Rows; i++ {
+		for j := 0; j < predictions.Cols; j++ {
+			// Sigmoid activation
+			sigmoidOutput := 1 / (1 + math.Exp(-predictions.Data[i][j]))
+			// BCE loss calculation
+			loss += -targets.Data[i][j]*math.Log(sigmoidOutput) - (1-targets.Data[i][j])*math.Log(1-sigmoidOutput)
+			// fmt.Println("Loss2", predictions.Data[i][j], loss)
+		}
+	}
+	// Averaging the loss over all observations
+	loss /= float64(predictions.Rows)
+
+	return loss, nil
 }
 
 // LossCategoricalCrossentropy represents categorical cross-entropy loss

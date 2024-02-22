@@ -43,7 +43,7 @@ func main() {
 
 	model := nn.NewModel(2, 10, 1, 0.01)
 
-	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 1)
+	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 100)
 
 	// // inputs := gen_data(100)
 	// for _, row := range X_tensor.Data {
