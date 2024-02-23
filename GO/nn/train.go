@@ -50,7 +50,7 @@ func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 		output := m.OutputLayer.Forward(m.InputLayer.Outputs)
 
 		// Compute loss
-		loss, err := m.Loss.Forward(output, y) // Use the Forward method of BCEWithLogitsLoss
+		loss, err := m.Loss.Forward(output, y)
 		if err != nil {
 			fmt.Println("Error computing loss:", err)
 			return
@@ -58,27 +58,17 @@ func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 
 		// Compute gradients
 		dLoss := m.Loss.Backward(output, y)
-		// Check if dLoss is not nil before calling Update
-		if dLoss != nil {
-			fmt.Println("Proper Tensor Gradient")
-			m.Optimizer.Update(m.OutputLayer.Weights, dLoss)
-			// Note: You should also calculate and pass the correct gradients for biases
-			// m.Optimizer.Update(m.OutputLayer.Biases, dBiases)
-		} else {
-			fmt.Println("Error: dLoss is nil")
-			return
-		}
-		// dLoss, err := lossGradient(output, y)
-		// m.OutputLayer.Backward(dLoss)
-		// if err != nil {
-		// 	fmt.Println("Error computing gradients:", err)
-		// 	return
-		// }
 
-		// Update weights and biases using the optimizer
-		m.Optimizer.Update(m.OutputLayer.Weights, m.OutputLayer.DWeights)
-		m.Optimizer.Update(m.OutputLayer.Biases, m.OutputLayer.DBiases)
+		// Backpropagate through the output layer to compute gradients for weights and biases (backpropagation step 2)
+		// Assuming a simple linear layer without activation for demonstration
+		// Compute gradient of loss with respect to output layer weights (dWeights) and biases (dBiases)
+		dWeights, _ := m.InputLayer.Outputs.Transpose().MatrixMultiply(dLoss) // dLoss * Transpose(Inputs)
+		dBiases := tensor.Reshape(dLoss, 1)                                   // Summing gradients across batch for biases, simplified
 
-		fmt.Printf("Epoch %d: Training... Loss: %f\n", epoch, loss, dLoss)
+		// Update weights and biases using the optimizer (backpropagation step 3)
+		m.Optimizer.Update(m.OutputLayer.Weights, dWeights)
+		m.Optimizer.Update(m.OutputLayer.Biases, dBiases)
+
+		fmt.Printf("Epoch %d: Training... Loss: %f\n", epoch, loss)
 	}
 }

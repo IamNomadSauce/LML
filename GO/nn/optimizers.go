@@ -32,19 +32,30 @@ func NewAdamOptimizer(learningRate, beta1, beta2, epsilon float64) *AdamOptimize
 
 // Update updates the parameters based on gradients
 func (opt *AdamOptimizer) Update(params, grads *tensor.Tensor) {
-	fmt.Println("AdamUpdate\n", params.Data, "\n", grads.Data)
-	if opt.M == nil || opt.V == nil {
-		fmt.Println("Nil Nil")
-		// Initialize M and V tensors with the same shape as params but filled with zeros
-		m := tensor.NewZerosTensor(params.Rows, params.Cols)
-		v := tensor.NewZerosTensor(params.Rows, params.Cols)
-		fmt.Println("m", m.Shape().Data, "\nv", v.Shape().Data)
-		opt.M = m
-		opt.V = v
+	// fmt.Println("AdamUpdate\n", params.Data, "\n", grads.Data)
+	if opt.M == nil {
+		opt.M = tensor.NewZerosTensor(params.Rows, params.Cols)
+		if opt.M == nil {
+			fmt.Println("Failed to initialize M tensor")
+			return
+		}
 	}
+	if opt.V == nil {
+		opt.V = tensor.NewZerosTensor(params.Rows, params.Cols)
+		if opt.V == nil {
+			fmt.Println("Failed to initialize V tensor")
+			return
+		}
+	}
+
+	m := tensor.NewZerosTensor(params.Rows, params.Cols)
+	v := tensor.NewZerosTensor(params.Rows, params.Cols)
+	opt.M = m
+	opt.V = v
 
 	opt.T++ // Increment timestep
 
+	// fmt.Println(grads.Data)
 	for i := range params.Data {
 		for j := range params.Data[i] {
 			g := grads.Data[i][j]

@@ -35,15 +35,15 @@ func main() {
 	// 	{0.66193414, 0.74956197},
 	// }
 
-	X, y, X_test, y_test := dl.GenerateUpdownData(100)
+	X, y, X_test, y_test := dl.GenerateUpdownData(10000)
 	X_tensor, y_tensor := tensor.NewTensor(X), tensor.NewTensor(y)
 	X_test_tensor, y_test_tensor := tensor.NewTensor(X_test), tensor.NewTensor(y_test)
 
 	// fmt.Println(X_tensor.Data, y_tensor.Data, X_test_tensor.Data, y_test_tensor.Data)
 
-	model := nn.NewModel(2, 10, 1, 0.01)
+	model := nn.NewModel(2, 10, 1, 0.0001)
 
-	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 5)
+	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 10001)
 
 	// // inputs := gen_data(100)
 	// for _, row := range X_tensor.Data {
