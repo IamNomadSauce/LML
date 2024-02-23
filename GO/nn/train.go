@@ -8,78 +8,77 @@ import (
 )
 
 type Model struct {
-	InputLayer       LayerDense
-	InputActivation  *Activation_ReLU
-	OutputLayer      *LinearLayer
-	OutputActivation *ActivationSoftmax
-	Learning_Rate    float64
-	Loss             LossFunction
+	InputLayer      LayerDense
+	InputActivation *Activation_ReLU
+	OutputLayer     *LinearLayer
+	Learning_Rate   float64
+	Loss            *BCEWithLogitsLoss // Add the Loss field
+	Optimizer       *AdamOptimizer
 }
 
 func NewModel(nInput, nHidden, nOutputs int, learningRate float64) *Model {
-	// Dense Layer
 	inputLayer := New_Dense_Layer(int64(nInput), int64(nHidden))
-	// Relu Activation
 	inputActivation := New_ReLU_Activation()
-	// Linear output
-	linearLayer := NewLinearLayer(nHidden, nOutputs, inputActivation.Output) // Create the linear layer
-	fmt.Println(linearLayer)
+	linearLayer := NewLinearLayer(nHidden, nOutputs)
 
-	// BCEwLogits
-	// loss_function :=
+	// Initialize the BCEWithLogitsLoss for the model
+	loss := &BCEWithLogitsLoss{} // Assuming predictions and targets will be set during training
+
+	// Initialize the AdamOptimizer
+	optimizer := NewAdamOptimizer(learningRate, 0.9, 0.999, 1e-8)
 
 	return &Model{
 		InputLayer:      inputLayer,
 		InputActivation: inputActivation,
 		OutputLayer:     linearLayer,
 		Learning_Rate:   learningRate,
-		// Loss:            LossFunction,
+		Loss:            loss,
+		Optimizer:       optimizer,
 	}
 }
 
 func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
-	fmt.Println("\nTraining the Model\n")
+	fmt.Println("\nTraining the Model", X.Shape().Data)
+
 	for epoch := 1; epoch <= epochs; epoch++ {
+		fmt.Println("\nEpoch", epoch)
 
-		// fmt.Println("FORWARD-Inputs Layer", X.Rows, X.Cols)
-		// Forward pass through input layer and activation
+		m.Optimizer.ZeroGrad()
+		// Forward pass through layers
 		m.InputLayer.Forward(X)
-		// fmt.Println("FORWARD-DenseLayer", m.InputLayer.Outputs.Rows, m.InputLayer.Outputs.Cols)
-
-		// Forward pass through ReLU activation layer
 		m.InputActivation.Forward(m.InputLayer.Outputs, true)
-		// fmt.Println("FORWARD ReLU Forward", m.InputActivation.Output.Rows, m.InputActivation.Output.Cols)
-
-		// Forward pass through output layer (linear layer)
 		output := m.OutputLayer.Forward(m.InputLayer.Outputs)
-		// fmt.Println("Model Train Linear Layer Forward", output.Rows, output.Cols)
-		// for _, row := range output.Data {
-		// 	fmt.Println("Row", row)
-		// }
 
-		// Loss
-		loss, err := BCEWithLogitsLoss(output, y)
-
+		// Compute loss
+		loss, err := m.Loss.Forward(output, y) // Use the Forward method of BCEWithLogitsLoss
 		if err != nil {
-			fmt.Println("BCEwL ")
+			fmt.Println("Error computing loss:", err)
+			return
 		}
 
-		fmt.Println("Outputs:", output.Data, "\ny_train", y.Data, "\n", "LOSS", loss, "\n")
+		// Compute gradients
+		dLoss := m.Loss.Backward(output, y)
+		// Check if dLoss is not nil before calling Update
+		if dLoss != nil {
+			fmt.Println("Proper Tensor Gradient")
+			m.Optimizer.Update(m.OutputLayer.Weights, dLoss)
+			// Note: You should also calculate and pass the correct gradients for biases
+			// m.Optimizer.Update(m.OutputLayer.Biases, dBiases)
+		} else {
+			fmt.Println("Error: dLoss is nil")
+			return
+		}
+		// dLoss, err := lossGradient(output, y)
+		// m.OutputLayer.Backward(dLoss)
+		// if err != nil {
+		// 	fmt.Println("Error computing gradients:", err)
+		// 	return
+		// }
 
-		// Apply softmax activation
-		// m.OutputActivation.Forward(output, true)
+		// Update weights and biases using the optimizer
+		m.Optimizer.Update(m.OutputLayer.Weights, m.OutputLayer.DWeights)
+		m.Optimizer.Update(m.OutputLayer.Biases, m.OutputLayer.DBiases)
 
-		// Calculate loss (not shown here)
-		// Backward pass and optimization (not shown here)
-
-		fmt.Printf("Epoch %d: Training...\n", epoch)
+		fmt.Printf("Epoch %d: Training... Loss: %f\n", epoch, loss, dLoss)
 	}
 }
-
-// type Layer interface {
-// 	Forward(inputs *tensor.Tensor, training bool)
-// 	Backward(dvalues *tensor.Tensor)
-// 	SetPrev(layer Layer)
-// 	SetNext(layer Layer)
-// 	// ... other methods required by Layer
-// }

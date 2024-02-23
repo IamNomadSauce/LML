@@ -12,27 +12,86 @@ type LossFunction interface {
 	Calculate(output, y *tensor.Tensor) float64
 }
 
-// BCEWithLogitsLoss calculates the binary cross-entropy loss with logits
-func BCEWithLogitsLoss(predictions, targets *tensor.Tensor) (float64, error) {
-	if predictions.Rows != targets.Rows || predictions.Cols != targets.Cols {
+// BCEWithLogitsLossStruct represents a structure for binary cross-entropy loss with logits
+type BCEWithLogitsLoss struct {
+	Predictions *tensor.Tensor
+	Targets     *tensor.Tensor
+}
+
+// NewBCEWithLogitsLoss creates a new instance of BCEWithLogitsLoss
+func NewBCEWithLogitsLoss(predictions, targets *tensor.Tensor) *BCEWithLogitsLoss {
+	return &BCEWithLogitsLoss{
+		Predictions: predictions,
+		Targets:     targets,
+	}
+}
+
+// Forward calculates the binary cross-entropy loss with logits (forward pass)
+func (b *BCEWithLogitsLoss) Forward(output, y_true *tensor.Tensor) (float64, error) {
+	// fmt.Println("Outputs\n", output.Data, "\ny_true", y_true.Data)
+	fmt.Println("BCE_Forward Outputs\n", output.Rows, output.Cols, "\ny_true\n", y_true.Rows, y_true.Cols)
+	if output.Rows != y_true.Rows || output.Cols != y_true.Cols {
+		fmt.Println("BCEwLL Forward error")
 		return 0, fmt.Errorf("predictions and targets have different shapes")
 	}
 
 	loss := 0.0
-	for i := 0; i < predictions.Rows; i++ {
-		for j := 0; j < predictions.Cols; j++ {
+	for i := 0; i < output.Rows; i++ {
+		for j := 0; j < output.Cols; j++ {
 			// Sigmoid activation
-			sigmoidOutput := 1 / (1 + math.Exp(-predictions.Data[i][j]))
+			sigmoidOutput := 1 / (1 + math.Exp(-output.Data[i][j]))
 			// BCE loss calculation
-			loss += -targets.Data[i][j]*math.Log(sigmoidOutput) - (1-targets.Data[i][j])*math.Log(1-sigmoidOutput)
-			// fmt.Println("Loss2", predictions.Data[i][j], loss)
+			loss += -y_true.Data[i][j]*math.Log(sigmoidOutput) - (1-y_true.Data[i][j])*math.Log(1-sigmoidOutput)
 		}
 	}
 	// Averaging the loss over all observations
-	loss /= float64(predictions.Rows)
+	loss /= float64(output.Rows)
 
 	return loss, nil
 }
+
+// Backward calculates the gradient of the binary cross-entropy loss with logits (backward pass)
+func (b *BCEWithLogitsLoss) Backward(yPred, yTrue *tensor.Tensor) *tensor.Tensor {
+	if yPred.Rows != yTrue.Rows || yPred.Cols != yTrue.Cols {
+		// return nil, fmt.Errorf("predictions and targets have different shapes")
+	}
+
+	gradients := tensor.NewTensor(yPred.Data)
+
+	for i := 0; i < yPred.Rows; i++ {
+		for j := 0; j < yPred.Cols; j++ {
+			// Sigmoid activation
+			sigmoidOutput := 1 / (1 + math.Exp(-yPred.Data[i][j]))
+			// Gradient calculation: derivative of loss with respect to logits
+			gradients.Data[i][j] = sigmoidOutput - yTrue.Data[i][j]
+		}
+	}
+
+	return gradients
+}
+
+// lossGradient calculates the gradient of the binary cross-entropy loss with logits.
+func lossGradient(predictions, targets *tensor.Tensor) (*tensor.Tensor, error) {
+	if predictions.Rows != targets.Rows || predictions.Cols != targets.Cols {
+		return nil, fmt.Errorf("predictions and targets have different shapes")
+	}
+
+	gradientData := make([][]float64, predictions.Rows)
+	for i := 0; i < predictions.Rows; i++ {
+		gradientData[i] = make([]float64, predictions.Cols)
+		for j := 0; j < predictions.Cols; j++ {
+			// Calculate the sigmoid of the prediction
+			sigmoidOutput := 1 / (1 + math.Exp(-predictions.Data[i][j]))
+			// Calculate the gradient
+			gradientData[i][j] = sigmoidOutput - targets.Data[i][j]
+		}
+	}
+
+	return tensor.NewTensor(gradientData), nil
+}
+
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 // LossCategoricalCrossentropy represents categorical cross-entropy loss
 type LossCategoricalCrossentropy struct{}

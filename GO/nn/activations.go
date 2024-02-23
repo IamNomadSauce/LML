@@ -171,19 +171,21 @@ func (a *ActivationSigmoid) Forward(inputs *tensor.Tensor, training bool) {
 	a.Output = tensor.NewTensor(outputData)
 }
 
-type LinearLayer struct {
-	Weights *tensor.Tensor
-	Biases  *tensor.Tensor
-}
-
 // ----------------------------------------------------------------
 // Linear
 // ----------------------------------------------------------------
+type LinearLayer struct {
+	Weights  *tensor.Tensor
+	Biases   *tensor.Tensor
+	Inputs   *tensor.Tensor // Inputs to the layer, stored during forward pass
+	DWeights *tensor.Tensor // Gradient of weights
+	DBiases  *tensor.Tensor // Gradient of biases
+	DInputs  *tensor.Tensor // Gradient of inputs
+}
 
 // NewLinearLayer creates a new linear layer with given input and output sizes
-func NewLinearLayer(inputDim, outputDim int, inputs *tensor.Tensor) *LinearLayer {
-	// fmt.Println("\nNew Linear Layer", inputDim, outputDim)
-
+func NewLinearLayer(inputDim, outputDim int) *LinearLayer {
+	fmt.Println("NewLinear", inputDim, outputDim)
 	// Initialize weights with Xavier initialization
 	weightsData := XavierInit(outputDim, inputDim)
 	weights := tensor.NewTensor(weightsData)
@@ -195,33 +197,42 @@ func NewLinearLayer(inputDim, outputDim int, inputs *tensor.Tensor) *LinearLayer
 	}
 	biases := tensor.NewTensor(biasesData)
 
-	fmt.Println("Weights:", weights.Data, "\n", weights.Rows, weights.Cols, "\nBiases", biases.Data, "\n", biases.Rows, biases.Cols)
-
 	return &LinearLayer{Weights: weights, Biases: biases}
 }
 
 // Forward performs the forward pass
-func (l *LinearLayer) Forward(input *tensor.Tensor) *tensor.Tensor {
-	// Perform matrix multiplication between input and weights
-	// fmt.Println("\nLinear_Layer Forward", input.Rows, input.Cols)
-	output, err := input.MatrixMultiply(l.Weights)
-	// for _, row := range output.Data {
-	// 	fmt.Println("Row", row)
-	// }
-	// fmt.Println("LL-Forward-Outputs", output.Rows, output.Cols)
+func (l *LinearLayer) Forward(inputs *tensor.Tensor) *tensor.Tensor {
+	l.Inputs = inputs // Store inputs for use in backward pass
+	output, err := inputs.MatrixMultiply(l.Weights)
 	if err != nil {
 		fmt.Println("Error during forward pass matrix multiplication:", err)
 		return nil
 	}
-
-	// Add biases to the result of the matrix multiplication
 	output, err = output.Add(l.Biases)
 	if err != nil {
 		fmt.Println("Error during forward pass bias addition:", err)
 		return nil
 	}
-
 	return output
+}
+
+// Backward performs the backward pass
+func (l *LinearLayer) Backward(dvalues *tensor.Tensor) {
+	// Gradient on parameters
+	l.DWeights, _ = l.Inputs.Transpose().MatrixMultiply(dvalues)
+
+	// Manually sum gradients over batches for biases
+	biasesGradients := make([][]float64, len(l.Biases.Data))
+	for i := range biasesGradients {
+		biasesGradients[i] = make([]float64, 1)
+		for j := 0; j < dvalues.Rows; j++ {
+			biasesGradients[i][0] += dvalues.Data[j][i]
+		}
+	}
+	l.DBiases = tensor.NewTensor(biasesGradients)
+
+	// Gradient on values
+	l.DInputs, _ = dvalues.MatrixMultiply(l.Weights.Transpose())
 }
 
 // -------
@@ -229,6 +240,7 @@ func (l *LinearLayer) Forward(input *tensor.Tensor) *tensor.Tensor {
 // XavierInit initializes a slice of slices with Xavier/Glorot uniform distribution
 // inputDim is the number of input units, outputDim is the number of output units
 func XavierInit(inputDim, outputDim int) [][]float64 {
+	fmt.Println("\nXavierInit\n", inputDim, outputDim)
 	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
 
 	lower := -math.Sqrt(6.0 / float64(inputDim+outputDim))

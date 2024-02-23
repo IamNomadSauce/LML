@@ -38,10 +38,10 @@ func NewZerosTensor(inputN, outputN int) *Tensor {
 	return NewTensor(sliceOfSlices)
 }
 
-// Shape returns the shape of the tensor as {rows, columns}
-func (t *Tensor) Shape() (int, int) {
-	fmt.Println("Tensor", t)
-	return t.Rows, t.Cols
+// Shape returns a new tensor representing the shape of the tensor as {rows, columns}.
+func (t *Tensor) Shape() *Tensor {
+	shapeData := [][]float64{{float64(t.Rows), float64(t.Cols)}}
+	return NewTensor(shapeData)
 }
 
 // Transpose returns a new tensor that is the transpose of the original
