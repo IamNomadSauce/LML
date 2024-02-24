@@ -42,7 +42,7 @@ func (a *Activation_ReLU) Forward(Inputs *tensor.Tensor, training bool) {
 }
 
 // Backward performs the backward pass
-func (a *Activation_ReLU) Backward(dvalues *tensor.Tensor) {
+func (a *Activation_ReLU) Backward(dvalues *tensor.Tensor) *tensor.Tensor {
 	// Make a copy of values first
 	DInputsData := make([][]float64, dvalues.Rows)
 	for i := range DInputsData {
@@ -59,6 +59,8 @@ func (a *Activation_ReLU) Backward(dvalues *tensor.Tensor) {
 			}
 		}
 	}
+
+	return a.DInputs
 }
 
 // ----------------------------------------------------------------
@@ -181,6 +183,7 @@ type LinearLayer struct {
 	DWeights *tensor.Tensor // Gradient of weights
 	DBiases  *tensor.Tensor // Gradient of biases
 	DInputs  *tensor.Tensor // Gradient of inputs
+	Outputs  *tensor.Tensor
 }
 
 // NewLinearLayer creates a new linear layer with given input and output sizes
@@ -203,6 +206,7 @@ func NewLinearLayer(inputDim, outputDim int) *LinearLayer {
 // Forward performs the forward pass
 func (l *LinearLayer) Forward(inputs *tensor.Tensor) *tensor.Tensor {
 	l.Inputs = inputs // Store inputs for use in backward pass
+	fmt.Println("Linear-forward", inputs.Rows, inputs.Cols)
 	output, err := inputs.MatrixMultiply(l.Weights)
 	if err != nil {
 		fmt.Println("Error during forward pass matrix multiplication:", err)
@@ -217,7 +221,7 @@ func (l *LinearLayer) Forward(inputs *tensor.Tensor) *tensor.Tensor {
 }
 
 // Backward performs the backward pass
-func (l *LinearLayer) Backward(dvalues *tensor.Tensor) {
+func (l *LinearLayer) Backward(dvalues *tensor.Tensor) *tensor.Tensor {
 	// Gradient on parameters
 	l.DWeights, _ = l.Inputs.Transpose().MatrixMultiply(dvalues)
 
@@ -233,6 +237,7 @@ func (l *LinearLayer) Backward(dvalues *tensor.Tensor) {
 
 	// Gradient on values
 	l.DInputs, _ = dvalues.MatrixMultiply(l.Weights.Transpose())
+	return l.DInputs
 }
 
 // -------

@@ -21,8 +21,10 @@ func NewTensor(data [][]float64) *Tensor {
 	rows := len(data)
 	cols := 0
 	if rows > 0 {
-		cols = len(data[0])
+		cols = len(data[0]) // Correctly set the number of columns
 	}
+	fmt.Println("NewTensor", rows, cols)
+
 	return &Tensor{Data: data, Rows: rows, Cols: cols}
 }
 
@@ -31,7 +33,7 @@ func NewZerosTensor(inputN, outputN int) *Tensor {
 	// Iterate over each element in the outer slice
 	sliceOfSlices := make([][]float64, inputN)
 	for i := range sliceOfSlices {
-		// Initialize each inner slice with length y, filled with zeros
+		// Initialize each inner slice with length outputN, filled with zeros
 		sliceOfSlices[i] = make([]float64, outputN)
 	}
 
@@ -40,6 +42,7 @@ func NewZerosTensor(inputN, outputN int) *Tensor {
 
 // Shape returns a new tensor representing the shape of the tensor as {rows, columns}.
 func (t *Tensor) Shape() *Tensor {
+	fmt.Println("Shape_shape", t.Rows, t.Cols)
 	shapeData := [][]float64{{float64(t.Rows), float64(t.Cols)}}
 	return NewTensor(shapeData)
 }
@@ -97,7 +100,7 @@ func Reshape(biases *Tensor, numRows int) *Tensor {
 
 // MatrixMultiply performs matrix multiplication with another tensor and returns a new tensor
 func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
-	// fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
+	fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 
 	if t.Cols != other.Rows {
 
@@ -118,7 +121,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 		}
 	}
 	rs := NewTensor(resultData)
-	// fmt.Println("MatMul Results\n", rs.Rows, rs.Cols, "\n")
+	fmt.Println("MatMul Results\n", rs.Shape().Data, "\n")
 	return rs, nil
 }
 
@@ -171,4 +174,19 @@ func (t *Tensor) Argmax(axis int) *Tensor {
 		indices[i] = []float64{float64(maxIdx)}
 	}
 	return NewTensor(indices)
+}
+
+// ElementWiseMultiply performs element-wise multiplication between two tensors
+func ElementWiseMultiply(a, b *Tensor) *Tensor {
+	if a.Rows != b.Rows || a.Cols != b.Cols {
+		panic("tensors have different shapes")
+	}
+	resultData := make([][]float64, a.Rows)
+	for i := range resultData {
+		resultData[i] = make([]float64, a.Cols)
+		for j := range resultData[i] {
+			resultData[i][j] = a.Data[i][j] * b.Data[i][j]
+		}
+	}
+	return NewTensor(resultData)
 }

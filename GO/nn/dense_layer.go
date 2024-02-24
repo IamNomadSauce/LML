@@ -111,10 +111,12 @@ func (d *LayerDense) Forward(inputs *tensor.Tensor) {
 
 // Backward Pass
 // Backward performs the backward pass
-func (l *LayerDense) Backward(dvalues *tensor.Tensor) {
+func (l *LayerDense) Backward(dvalues *tensor.Tensor) *tensor.Tensor {
 	// Gradients on parameters
 	l.DWeights, _ = l.Outputs.Transpose().DotProduct(dvalues)
-	l.DBiases = tensor.NewTensor([][]float64{{0}}) // Initialize DBiases with zeros
+	fmt.Println("l.OutputsN", l.OutputsN)
+	l.DBiases = tensor.NewZerosTensor(1, int(l.OutputsN)) // Initialize DBiases with zeros
+	fmt.Println("Dense Layer Backward\nl.DWeights:", l.DWeights.Shape().Data, "\nl.DBiases: ", l.DBiases.Shape().Data)
 	for i := 0; i < dvalues.Rows; i++ {
 		for j := 0; j < dvalues.Cols; j++ {
 			l.DBiases.Data[0][j] += dvalues.Data[i][j]
@@ -173,6 +175,54 @@ func (l *LayerDense) Backward(dvalues *tensor.Tensor) {
 
 	// Gradient on values
 	l.DInputs, _ = dvalues.DotProduct(l.Weights.Transpose())
+	return l.DInputs
 }
 
 // ------------
+// DropoutLayer represents a dropout layer
+type DropoutLayer struct {
+	Output *tensor.Tensor
+	Rate   float64        // The dropout rate, i.e., the probability of setting a neuron to zero
+	Mask   *tensor.Tensor // A mask tensor that determines which units are dropped
+}
+
+// NewDropoutLayer creates a new instance of DropoutLayer
+func NewDropoutLayer(rate float64) *DropoutLayer {
+	return &DropoutLayer{
+		Rate: rate,
+	}
+}
+
+// Forward performs the forward pass with dropout
+func (d *DropoutLayer) Forward(input *tensor.Tensor, training bool) *tensor.Tensor {
+	if !training {
+		// During inference, return the input as is
+		return input
+	}
+
+	// During training, create a mask to randomly drop units
+	maskData := make([][]float64, input.Rows)
+	for i := range maskData {
+		maskData[i] = make([]float64, input.Cols)
+		for j := range maskData[i] {
+			if rand.Float64() > d.Rate {
+				maskData[i][j] = 1.0 / (1.0 - d.Rate) // Scale the activations to not reduce the expected value
+			} else {
+				maskData[i][j] = 0.0
+			}
+		}
+	}
+	d.Mask = tensor.NewTensor(maskData)
+
+	// Apply the mask to the input
+	output := tensor.ElementWiseMultiply(input, d.Mask)
+	d.Output = output
+	return output
+}
+
+// Backward performs the backward pass for the dropout layer
+func (d *DropoutLayer) Backward(dvalues *tensor.Tensor) *tensor.Tensor {
+	// Element-wise multiplication of the incoming gradient with the mask
+	dInputs := tensor.ElementWiseMultiply(dvalues, d.Mask)
+	return dInputs
+}

@@ -29,7 +29,7 @@ func NewBCEWithLogitsLoss(predictions, targets *tensor.Tensor) *BCEWithLogitsLos
 // Forward calculates the binary cross-entropy loss with logits (forward pass)
 func (b *BCEWithLogitsLoss) Forward(output, y_true *tensor.Tensor) (float64, error) {
 	// fmt.Println("Outputs\n", output.Data, "\ny_true", y_true.Data)
-	fmt.Println("BCE_Forward Outputs\n", output.Rows, output.Cols, "\ny_true\n", y_true.Rows, y_true.Cols)
+	// fmt.Println("BCE_Forward Outputs\n", output.Rows, output.Cols, "\ny_true\n", y_true.Rows, y_true.Cols)
 	if output.Rows != y_true.Rows || output.Cols != y_true.Cols {
 		fmt.Println("BCEwLL Forward error")
 		return 0, fmt.Errorf("predictions and targets have different shapes")
