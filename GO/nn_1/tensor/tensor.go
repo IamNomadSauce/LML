@@ -178,6 +178,7 @@ func (t *Tensor) Argmax(axis int) *Tensor {
 
 // ElementWiseMultiply performs element-wise multiplication between two tensors
 func ElementWiseMultiply(a, b *Tensor) *Tensor {
+	fmt.Println("ElementMultiply")
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		panic("tensors have different shapes")
 	}
