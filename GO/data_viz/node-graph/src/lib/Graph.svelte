@@ -11,6 +11,11 @@
   const paddingY = 100; // Vertical padding value between child nodes
   let nodes = [];
   let edges = [];
+  let outerWidth =0
+  let innerWidth =0
+  let outerHeight =0
+  let innerHeight =0
+
 
   // Function to calculate initial positions for nodes
   // Child nodes are positioned to the right of their parent node
@@ -73,10 +78,12 @@
 </script>
 
 <h1>Graph</h1>
-<svg class="graph" width="800" height="600">
-  {#each nodes as node}
+<svelte:window bind:outerWidth bind:outerHeight bind:innerWidth bind:innerHeight />
+
+<svg class="graph" width={outerWidth} height={outerHeight}>
+  {#each nodes as node, i}
     <circle
-      on:mouseover={() => console.log("node", node, nodes)}
+      on:mouseover={() => console.log("node", i, node, nodes)}
       cx={node.x}
       cy={node.y}
       r="10"
