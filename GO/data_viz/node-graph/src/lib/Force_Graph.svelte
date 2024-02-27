@@ -48,6 +48,7 @@
     });
   
     $: if (graphDataArray.length > 0) {
+        
         let data = parseGraph(graphDataArray);
         nodes = data.nodes;
         edges = data.edges;

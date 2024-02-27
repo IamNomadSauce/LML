@@ -1,16 +1,22 @@
 <script>
-    import { onMount } from 'svelte';
-  
-    export let graphDataArray = [];
-    const initialX = 100; // Initial X position for the first node
-    const paddingX = 100; // Horizontal padding value between parent and child nodes
-    const paddingY = 100; // Vertical padding value between child nodes
-    let nodes = [];
-    let edges = [];
-  
-    // Function to calculate initial positions for nodes
-    // Child nodes are positioned to the right of their parent node
-    function calculateInitialPositions(graphData) {
+  import { onMount } from "svelte";
+
+  export let graphDataArray = [];
+  $: console.log("DATA",graphDataArray)
+  $: if (Object.keys(graphDataArray).length > 0) {
+    graphDataArray = Object.values(graphDataArray)
+  }
+  const initialX = 100; // Initial X position for the first node
+  const paddingX = 100; // Horizontal padding value between parent and child nodes
+  const paddingY = 100; // Vertical padding value between child nodes
+  let nodes = [];
+  let edges = [];
+
+  // Function to calculate initial positions for nodes
+  // Child nodes are positioned to the right of their parent node
+  function calculateInitialPositions(graphData) {
+    console.log("Calculate Initial Positions")
+
       let currentPositionX = initialX;
       let baseY = 300; // Base Y position for the first node
   
@@ -29,10 +35,13 @@
           // Calculate starting y position for the first child
           let startY = parentNode.y - parentNode.children.length * paddingY / 2 + paddingY / 2;
           parentNode.children.forEach((childId, index) => {
-            let childNode = graphData.find(n => n.id === childId);
+            // console.log("Parent", childId.id)
+            let childNode = graphData.find(n => n.id === childId.id);
+            // console.log("ChildNode", childNode)
             if (childNode) {
               childNode.x = parentNode.x + paddingX; // Position child to the right of the parent
               childNode.y = startY + index * paddingY; // Calculate y position for each child
+            //   console.log("Child Node", childNode.x, childNode.y)
             }
           });
         }
@@ -43,6 +52,7 @@
   
     // Parse graph data and apply layout
     function parseGraph(graph) {
+        console.log("Parse Graph")
       if (graph.length === 0) {
         return { point: [], links: [] };
       }
@@ -58,25 +68,36 @@
       nodes = data.point;
       edges = data.links;
     }
-  </script>
-  
-  <h1>Graph</h1>
-  <svg class="graph" width="800" height="600">
-    {#each nodes as node}
-      <circle on:mouseover={() => console.log("node", node, nodes)}
-              cx={node.x} cy={node.y} r="10" fill="blue" />
+
+    $: console.log("Nodes\n", nodes, "\nEdges\n", edges)
+</script>
+
+<h1>Graph</h1>
+<svg class="graph" width="800" height="600">
+  {#each nodes as node}
+    <circle
+      on:mouseover={() => console.log("node", node, nodes)}
+      cx={node.x}
+      cy={node.y}
+      r="10"
+      fill="blue"
+    />
+  {/each}
+  {#each edges as edge}
+    <!-- {#if nodes.find((n) => n.id === edge.source) && nodes.find((n) => n.id === edge.target)} -->
+        <line
+        x1={nodes.find((n) => n.id === edge.source).x}
+        y1={nodes.find((n) => n.id === edge.source).y}
+        x2={nodes.find((n) => n.id === edge.target.id).x}
+        y2={nodes.find((n) => n.id === edge.target.id).y}
+        stroke="black"
+        />
+    <!-- {/if} -->
     {/each}
-    {#each edges as edge}
-      <line x1={nodes.find(n => n.id === edge.source).x} 
-            y1={nodes.find(n => n.id === edge.source).y} 
-            x2={nodes.find(n => n.id === edge.target).x} 
-            y2={nodes.find(n => n.id === edge.target).y} 
-            stroke="black" />
-    {/each}
-  </svg>
-  
-  <style>
-    .graph {
-      background-color: #212529 !important;
-    }
-  </style>
+</svg>
+
+<style>
+  .graph {
+    background-color: #212529 !important;
+  }
+</style>
