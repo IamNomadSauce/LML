@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
 
   export let graphDataArray = [];
-  $: console.log("DATA",graphDataArray)
+//   $: console.log("DATA",graphDataArray)
   $: if (Object.keys(graphDataArray).length > 0) {
     graphDataArray = Object.values(graphDataArray)
   }
@@ -20,7 +20,7 @@
   // Function to calculate initial positions for nodes
   // Child nodes are positioned to the right of their parent node
   function calculateInitialPositions(graphData) {
-    console.log("Calculate Initial Positions")
+    // console.log("Calculate Initial Positions")
 
       let currentPositionX = initialX;
       let baseY = 300; // Base Y position for the first node
@@ -57,7 +57,7 @@
   
     // Parse graph data and apply layout
     function parseGraph(graph) {
-        console.log("Parse Graph")
+        // console.log("Parse Graph")
       if (graph.length === 0) {
         return { point: [], links: [] };
       }
@@ -74,7 +74,30 @@
       edges = data.links;
     }
 
-    $: console.log("Nodes\n", nodes, "\nEdges\n", edges)
+    // $: console.log("Nodes\n", nodes, "\nEdges\n", edges)
+
+    async function addNode(nodeData) {
+        console.log("Add Node", nodeData)
+    try {
+      const response = await fetch('http://localhost:8069/add_node', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(nodeData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Node added:', result);
+      graphDataArray = result
+    } catch (error) {
+      console.error('Error adding node:', error);
+    }
+  }
 </script>
 
 <h1>Graph</h1>
@@ -84,6 +107,8 @@
   {#each nodes as node, i}
     <circle
       on:mouseover={() => console.log("node", i, node, nodes)}
+      on:click={() => addNode(node)}
+
       cx={node.x}
       cy={node.y}
       r="10"

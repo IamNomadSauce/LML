@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -26,6 +27,7 @@ func NewGraph() *Graph {
 
 // AddNode adds a new node to the graph with the given id.
 func (g *Graph) AddNode(id int) {
+	fmt.Println("Add Node", id)
 	if _, exists := g.Nodes[id]; !exists {
 		g.Nodes[id] = &Node{ID: id}
 	}
@@ -70,7 +72,8 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 // graphHandler responds with the graph data in JSON format.
-func graphHandler(w http.ResponseWriter, r *http.Request) {
+func decision_tree(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Decision_Tree")
 	enableCors(&w) // Enable CORS
 
 	if r.Method == "OPTIONS" {
@@ -124,9 +127,129 @@ func graphHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(graphJSON)
 }
 
+// graphHandler responds with the graph data in JSON format.
+func node_graphHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Node_Graph")
+
+	enableCors(&w) // Enable CORS
+
+	if r.Method == "OPTIONS" {
+		return // Handle preflight request
+	}
+
+	// Convert the graph to JSON
+	graphJSON, err := json.Marshal(graph.Nodes)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type to application/json
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(graphJSON)
+}
+
+func api_add_node(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w) // Enable CORS for all responses
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var newNode Node
+	err = json.Unmarshal(body, &newNode)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var parentNode Node
+	parentNode = newNode
+
+	// Find the maximum existing node ID
+	maxID := -1
+	for id := range graph.Nodes {
+		if id > maxID {
+			maxID = id
+		}
+	}
+
+	// Set the newNode.ID to the maximum ID found plus one
+	newNode.ID = maxID + 1
+
+	// Add the new node to the graph
+	graph.AddNode(newNode.ID)
+	graph.AddEdge(parentNode.ID, newNode.ID)
+
+	// for _, child := range newNode.Children {
+	// 	graph.AddEdge(newNode.ID, child.ID)
+	// }
+
+	fmt.Printf("Received node: %+v\n", newNode)
+
+	graphJSON, err := json.Marshal(graph.Nodes)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(graphJSON)
+}
+
+var graph = NewGraph()
+
 func main() {
 	// Set up the HTTP server
-	http.HandleFunc("/graph", graphHandler)
+	graph.AddNode(0)
+	graph.AddNode(1)
+	graph.AddNode(2)
+	graph.AddNode(3)
+
+	graph.AddEdge(0, 1)
+	graph.AddEdge(0, 2)
+
+	// graph.AddNode(5)
+	// graph.AddNode(6)
+	// graph.AddNode(13)
+	// graph.AddNode(15)
+
+	// // graph.AddEdge(1, 2)
+	// // graph.AddEdge(1, 3)
+
+	// graph.AddEdge(5, 6)
+	// graph.AddEdge(5, 13)
+
+	// graph.AddEdge(5, 15)
+	// graph.AddEdge(5, 18)
+
+	// graph.AddEdge(13, 2)
+	// graph.AddEdge(13, 3)
+
+	// graph.AddNode(25)
+	// graph.AddNode(30)
+
+	// graph.AddEdge(0, 25)
+	// graph.AddEdge(25, 6)
+	// graph.AddEdge(25, 30)
+	http.HandleFunc("/node_graph", node_graphHandler)
+	http.HandleFunc("/add_node", api_add_node)
+	http.HandleFunc("/decision_tree", decision_tree)
 	fmt.Println("Server is running on port 8069...")
 	http.ListenAndServe(":8069", nil)
 }
