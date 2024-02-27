@@ -20,39 +20,39 @@
   // Function to calculate initial positions for nodes
   // Child nodes are positioned to the right of their parent node
   function calculateInitialPositions(graphData) {
-    // console.log("Calculate Initial Positions")
+    let currentPositionX = initialX;
+    let baseY = 300; // Base Y position for the first node
 
-      let currentPositionX = initialX;
-      let baseY = 300; // Base Y position for the first node
-  
-      // Assign x and y positions to parent nodes
-      graphData.forEach(node => {
+    // Assign x and y positions to parent nodes
+    graphData.forEach(node => {
         node.x = currentPositionX; // Set x for parent node
         node.y = baseY; // Set y for parent node
-  
+
         // Increment x position for the next node
         currentPositionX += paddingX;
-      });
-  
-      // Assign x and y positions to child nodes
-      graphData.forEach(parentNode => {
+    });
+
+    // Assign x and y positions to child nodes
+    graphData.forEach(parentNode => {
         if (parentNode.children && parentNode.children.length > 0) {
-          // Calculate starting y position for the first child
-          let startY = parentNode.y - parentNode.children.length * paddingY / 2 + paddingY / 2;
-          parentNode.children.forEach((childId, index) => {
-            // console.log("Parent", childId.id)
+        // Calculate the offset to start placing children symmetrically around the parent's baseY
+        let offset = (parentNode.children.length - 1) * paddingY / 2;
+
+        // Determine the X position for all children of this parent
+        let childrenX = parentNode.x + paddingX;
+
+        parentNode.children.forEach((childId, index) => {
             let childNode = graphData.find(n => n.id === childId.id);
-            // console.log("ChildNode", childNode)
             if (childNode) {
-              childNode.x = parentNode.x + paddingX; // Position child to the right of the parent
-              childNode.y = startY + index * paddingY; // Calculate y position for each child
-            //   console.log("Child Node", childNode.x, childNode.y)
+            childNode.x = childrenX; // Assign the same X value to all children
+            // Calculate y position for each child to be symmetrical around the parent's baseY
+            childNode.y = parentNode.y + (index * paddingY) - offset;
             }
-          });
+        });
         }
-      });
-  
-      return graphData;
+    });
+
+    return graphData;
     }
   
     // Parse graph data and apply layout
@@ -103,18 +103,8 @@
 <h1>Graph</h1>
 <svelte:window bind:outerWidth bind:outerHeight bind:innerWidth bind:innerHeight />
 
-<svg class="graph" width={outerWidth} height={outerHeight}>
-  {#each nodes as node, i}
-    <circle
-      on:mouseover={() => console.log("node", i, node, nodes)}
-      on:click={() => addNode(node)}
-
-      cx={node.x}
-      cy={node.y}
-      r="10"
-      fill="blue"
-    />
-  {/each}
+<svg class="graph" width={innerWidth} height={innerHeight}>
+  
   {#each edges as edge}
     <!-- {#if nodes.find((n) => n.id === edge.source) && nodes.find((n) => n.id === edge.target)} -->
         <line
@@ -126,6 +116,17 @@
         />
     <!-- {/if} -->
     {/each}
+    {#each nodes as node, i}
+    <circle
+      on:mouseover={() => console.log("node", i, node, nodes)}
+      on:click={() => addNode(node)}
+
+      cx={node.x}
+      cy={node.y}
+      r="10"
+      fill="blue"
+    />
+  {/each}
 </svg>
 
 <style>

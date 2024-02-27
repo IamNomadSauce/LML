@@ -217,12 +217,70 @@ var graph = NewGraph()
 func main() {
 	// Set up the HTTP server
 	graph.AddNode(0)
+
 	graph.AddNode(1)
 	graph.AddNode(2)
-	graph.AddNode(3)
 
 	graph.AddEdge(0, 1)
 	graph.AddEdge(0, 2)
+
+	graph.AddNode(3)
+	graph.AddNode(4)
+	graph.AddNode(5)
+	graph.AddNode(6)
+
+	graph.AddEdge(1, 3)
+	graph.AddEdge(1, 4)
+	graph.AddEdge(1, 5)
+	graph.AddEdge(1, 6)
+
+	graph.AddEdge(2, 3)
+	graph.AddEdge(2, 4)
+	graph.AddEdge(2, 5)
+	graph.AddEdge(2, 6)
+
+	//
+	graph.AddNode(7)
+	graph.AddNode(8)
+	graph.AddNode(9)
+	graph.AddNode(10)
+
+	graph.AddEdge(3, 7)
+	graph.AddEdge(3, 8)
+	graph.AddEdge(3, 9)
+	graph.AddEdge(3, 10)
+
+	graph.AddEdge(4, 7)
+	graph.AddEdge(4, 8)
+	graph.AddEdge(4, 9)
+	graph.AddEdge(4, 10)
+
+	graph.AddEdge(5, 7)
+	graph.AddEdge(5, 8)
+	graph.AddEdge(5, 9)
+	graph.AddEdge(5, 10)
+
+	graph.AddEdge(6, 7)
+	graph.AddEdge(6, 8)
+	graph.AddEdge(6, 9)
+	graph.AddEdge(6, 10)
+
+	// graph.AddNode(3)
+
+	// graph.AddNode(4)
+	// graph.AddEdge(1, 4)
+	// graph.AddEdge(2, 4)
+	// graph.AddEdge(3, 4)
+
+	// graph.AddNode(5)
+	// graph.AddEdge(1, 5)
+	// graph.AddEdge(2, 5)
+	// graph.AddEdge(3, 5)
+
+	// graph.AddNode(6)
+	// graph.AddEdge(1, 6)
+	// graph.AddEdge(2, 6)
+	// graph.AddEdge(3, 6)
 
 	// graph.AddNode(5)
 	// graph.AddNode(6)
