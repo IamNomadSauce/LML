@@ -7,12 +7,6 @@ import (
 	"net/http"
 )
 
-// Node represents a node in the graph with a unique identifier and a list of child nodes.
-type Node struct {
-	ID       int     `json:"id"`
-	Children []*Node `json:"children,omitempty"` // Use pointers to Node
-}
-
 // Graph represents a directed graph.
 type Graph struct {
 	Nodes map[int]*Node
@@ -33,6 +27,47 @@ func (g *Graph) AddNode(id int) {
 	}
 }
 
+// // AddEdge adds a directed edge from the node with id `from` to the node with id `to`.
+// func (g *Graph) AddEdge(from, to int) {
+// 	fromNode, fromExists := g.Nodes[from]
+// 	toNode, toExists := g.Nodes[to]
+
+// 	if !fromExists || !toExists {
+// 		fmt.Printf("One or both nodes not found in the graph: from=%d, to=%d\n", from, to)
+// 		return
+// 	}
+
+// 	fromNode.Children = append(fromNode.Children, toNode) // Add pointer to the child node
+// }
+
+// MarshalJSON customizes the JSON output of Node.
+func (n *Node) MarshalJSON() ([]byte, error) {
+	type Alias Node // Create an alias to avoid recursion
+	return json.Marshal(&struct {
+		*Alias
+		Parents []int `json:"parents"` // Use IDs instead of pointers
+	}{
+		Alias:   (*Alias)(n),
+		Parents: getParentsIDs(n.Parents), // Convert parents to IDs
+	})
+}
+
+// getParentsIDs converts a slice of *Node to a slice of node IDs.
+func getParentsIDs(parents []*Node) []int {
+	ids := make([]int, 0, len(parents))
+	for _, parent := range parents {
+		ids = append(ids, parent.ID)
+	}
+	return ids
+}
+
+// Node represents a node in the graph with a unique identifier and a list of child nodes.
+type Node struct {
+	ID       int     `json:"id"`
+	Parents  []*Node `json:"parents"`
+	Children []*Node `json:"children,omitempty"` // Use pointers to Node
+}
+
 // AddEdge adds a directed edge from the node with id `from` to the node with id `to`.
 func (g *Graph) AddEdge(from, to int) {
 	fromNode, fromExists := g.Nodes[from]
@@ -43,7 +78,21 @@ func (g *Graph) AddEdge(from, to int) {
 		return
 	}
 
+	// Check if fromNode is already a parent to avoid duplicates
+	isParent := false
+	for _, parent := range toNode.Parents {
+		if parent.ID == fromNode.ID {
+			isParent = true
+			break
+		}
+	}
+	if !isParent {
+		toNode.Parents = append(toNode.Parents, fromNode) // Append fromNode to toNode.Parents
+	}
+
 	fromNode.Children = append(fromNode.Children, toNode) // Add pointer to the child node
+
+	fmt.Println("\nAdd Edge\n", fromNode.ID, len(fromNode.Children), len(fromNode.Parents), "\n", toNode.ID, len(toNode.Children), len(toNode.Parents), "\n")
 }
 
 // FindRootNode finds the root node of the graph (node with no incoming edges).

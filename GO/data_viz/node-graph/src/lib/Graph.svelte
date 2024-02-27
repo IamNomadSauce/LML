@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
 
   export let graphDataArray = [];
+  $: console.log("GDA",graphDataArray)
 //   $: console.log("DATA",graphDataArray)
   $: if (Object.keys(graphDataArray).length > 0) {
     graphDataArray = Object.values(graphDataArray)
@@ -57,7 +58,7 @@
   
     // Parse graph data and apply layout
     function parseGraph(graph) {
-        // console.log("Parse Graph")
+        console.log("Parse Graph", graph)
       if (graph.length === 0) {
         return { point: [], links: [] };
       }
