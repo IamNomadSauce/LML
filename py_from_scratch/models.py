@@ -85,8 +85,7 @@ class Layer_Dropout:
             return
 
         # Generate and save scaled mask
-        self.binary_mask = np.random.binomial(1, self.rate,
-                           size=inputs.shape) / self.rate
+        self.binary_mask = np.random.binomial(1, self.rate, size=inputs.shape) / self.rate
         # Apply mask to output values
         self.output = inputs * self.binary_mask
 
@@ -128,7 +127,7 @@ class Activation_ReLU:
     def predictions(self, outputs):
         return outputs
 
-
+# Converted
 # Softmax activation
 class Activation_Softmax:
 
@@ -399,40 +398,24 @@ class Optimizer_Adam:
             layer.bias_cache = np.zeros_like(layer.biases)
 
         # Update momentum  with current gradients
-        layer.weight_momentums = self.beta_1 * \
-                                 layer.weight_momentums + \
-                                 (1 - self.beta_1) * layer.dweights
-        layer.bias_momentums = self.beta_1 * \
-                               layer.bias_momentums + \
-                               (1 - self.beta_1) * layer.dbiases
+        layer.weight_momentums = self.beta_1 * layer.weight_momentums + (1 - self.beta_1) * layer.dweights
+        layer.bias_momentums = self.beta_1 * layer.bias_momentums + (1 - self.beta_1) * layer.dbiases
         # Get corrected momentum
         # self.iteration is 0 at first pass
         # and we need to start with 1 here
-        weight_momentums_corrected = layer.weight_momentums / \
-            (1 - self.beta_1 ** (self.iterations + 1))
-        bias_momentums_corrected = layer.bias_momentums / \
-            (1 - self.beta_1 ** (self.iterations + 1))
+        weight_momentums_corrected = layer.weight_momentums / (1 - self.beta_1 ** (self.iterations + 1))
+        bias_momentums_corrected = layer.bias_momentums / (1 - self.beta_1 ** (self.iterations + 1))
         # Update cache with squared current gradients
-        layer.weight_cache = self.beta_2 * layer.weight_cache + \
-            (1 - self.beta_2) * layer.dweights**2
-        layer.bias_cache = self.beta_2 * layer.bias_cache + \
-            (1 - self.beta_2) * layer.dbiases**2
+        layer.weight_cache = self.beta_2 * layer.weight_cache + (1 - self.beta_2) * layer.dweights**2
+        layer.bias_cache = self.beta_2 * layer.bias_cache + (1 - self.beta_2) * layer.dbiases**2
         # Get corrected cache
-        weight_cache_corrected = layer.weight_cache / \
-            (1 - self.beta_2 ** (self.iterations + 1))
-        bias_cache_corrected = layer.bias_cache / \
-            (1 - self.beta_2 ** (self.iterations + 1))
+        weight_cache_corrected = layer.weight_cache / (1 - self.beta_2 ** (self.iterations + 1))
+        bias_cache_corrected = layer.bias_cache / (1 - self.beta_2 ** (self.iterations + 1))
 
         # Vanilla SGD parameter update + normalization
         # with square rooted cache
-        layer.weights += -self.current_learning_rate * \
-                         weight_momentums_corrected / \
-                         (np.sqrt(weight_cache_corrected) +
-                             self.epsilon)
-        layer.biases += -self.current_learning_rate * \
-                         bias_momentums_corrected / \
-                         (np.sqrt(bias_cache_corrected) +
-                             self.epsilon)
+        layer.weights += -self.current_learning_rate * weight_momentums_corrected / (np.sqrt(weight_cache_corrected) + self.epsilon)
+        layer.biases += -self.current_learning_rate * bias_momentums_corrected / (np.sqrt(bias_cache_corrected) + self.epsilon)
 
 
     # Call once after any parameter updates
@@ -440,6 +423,7 @@ class Optimizer_Adam:
         self.iterations += 1
 
 
+# Converted
 # Common loss class
 class Loss:
 
@@ -502,6 +486,7 @@ class Loss:
         return data_loss, self.regularization_loss()
 
 
+# Converted
 # Cross-entropy loss
 class Loss_CategoricalCrossentropy(Loss):
 
@@ -560,6 +545,7 @@ class Loss_CategoricalCrossentropy(Loss):
         self.dinputs = self.dinputs / samples
 
 
+# Converted
 # Softmax classifier - combined Softmax activation
 # and cross-entropy loss for faster backward step
 class Activation_Softmax_Loss_CategoricalCrossentropy():
@@ -599,8 +585,7 @@ class Loss_BinaryCrossentropy(Loss):
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
 
         # Calculate sample-wise loss
-        sample_losses = -(y_true * np.log(y_pred_clipped) +
-                          (1 - y_true) * np.log(1 - y_pred_clipped))
+        sample_losses = -(y_true * np.log(y_pred_clipped) + (1 - y_true) * np.log(1 - y_pred_clipped))
         sample_losses = np.mean(sample_losses, axis=-1)
 
         # Return losses
@@ -620,8 +605,7 @@ class Loss_BinaryCrossentropy(Loss):
         clipped_dvalues = np.clip(dvalues, 1e-7, 1 - 1e-7)
 
         # Calculate gradient
-        self.dinputs = -(y_true / clipped_dvalues -
-                         (1 - y_true) / (1 - clipped_dvalues)) / outputs
+        self.dinputs = -(y_true / clipped_dvalues - (1 - y_true) / (1 - clipped_dvalues)) / outputs
         # Normalize gradient
         self.dinputs = self.dinputs / samples
 
@@ -906,8 +890,7 @@ class Model:
             # which is Softmax activation
             # as we used combined activation/loss
             # object, let's set dinputs in this object
-            self.layers[-1].dinputs = \
-                self.softmax_classifier_output.dinputs
+            self.layers[-1].dinputs = self.softmax_classifier_output.dinputs
 
             # Call backward method going through
             # all the objects but last

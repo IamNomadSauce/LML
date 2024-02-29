@@ -102,7 +102,7 @@ def generate_updown_data(num, batch_size):
         a = random.randint(1, 100000)
         b = random.randint(1, 100000)
         c = int(a < b)
-        inputs.append([a, b, c])
+        inputs.append([a, b])
         outputs.append(c)
         data.append([inputs, outputs])
 

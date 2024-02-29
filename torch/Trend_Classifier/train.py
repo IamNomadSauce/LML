@@ -27,14 +27,19 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class BinaryClassifier(nn.Module):
     def __init__(self):
         super(BinaryClassifier, self).__init__()
-        self.hidden = nn.Linear(4, 10)  # 5 input features (o, h, l, c, t)
+        self.hidden = nn.Linear(2, 10)  # 5 input features (o, h, l, c, t)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.5)
         self.output = nn.Linear(10, 1)
 
     def forward(self, x):
+        # print("FORWARD-Inputs Layer", x.shape)
+        # print("FORWARD-DenseLayer", self.hidden(x).shape)
         x = self.relu(self.hidden(x))
+        # print("FORWARD-RELU-Shape", x.shape)
         x = self.output(x)  # Output without sigmoid for numerical stability with BCEWithLogitsLoss
+        # print("FORWARD-Linear-Shape", x.shape, "\n", x)
+        
         return x
 
 # Define the multi-classification model
@@ -115,11 +120,13 @@ def train(
 
     for epoch in range(num_epochs):
         # Forward pass
-        print("OUTPUT_0", X_train.shape, X_train)
+        # print("OUTPUT_0", X_train.shape, X_train)
         outputs = model(X_train).squeeze()  # Squeeze the output to match target shape
-        print("OUTPUT_1", outputs.shape, outputs)
+        # print("OUTPUT_1", outputs.shape, outputs)
         loss = loss_fn(outputs, y_train)
+        print("Outputs:", outputs.shape, "\ny_train", y_train.shape, "\n", "Loss:",loss.item())
         loss_array.append(loss.item() * 100)
+        print("Loss:", len(loss_array), "\n")
         # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
@@ -165,7 +172,7 @@ def load_weights(model: nn.Module):
 
 
 # model = BinaryClassifier().to(device)
-model = Multi_Classifier().to(device)
+model = BinaryClassifier().to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=5e-3, weight_decay=5e-5)
 
@@ -207,7 +214,7 @@ if args.train:
     # Train the model
     print("TRAIN")
     # test_data = data_loader.generate_updown_data(10000000, 32)
-    test_data = data_loader.generate_updown_data(1000, 1)
+    test_data = data_loader.generate_updown_data(100, 1)
 
     print(f"{test_data}")
     train(model=model, data=test_data, optimizer=optimizer)

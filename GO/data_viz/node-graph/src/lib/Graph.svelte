@@ -24,6 +24,8 @@
     let currentPositionX = initialX;
     let baseY = 300; // Base Y position for the first node
 
+    console.log("GraphData", graphData)
+
     // Assign x and y positions to parent nodes
     graphData.forEach(node => {
         node.x = currentPositionX; // Set x for parent node
@@ -32,6 +34,8 @@
         // Increment x position for the next node
         currentPositionX += paddingX;
     });
+
+    let visited = []
 
     // Assign x and y positions to child nodes
     graphData.forEach(parentNode => {
@@ -46,14 +50,27 @@
             let childNode = graphData.find(n => n.id === childId.id);
             if (childNode) {
             childNode.x = childrenX; // Assign the same X value to all children
+            // console.log("Parents", childNode.id, childNode.parents)
             // Calculate y position for each child to be symmetrical around the parent's baseY
-            childNode.y = parentNode.y + (index * paddingY) - offset;
+            calcParents(childNode)
+            childNode.y = parentNode.y + (index * paddingY) - (offset);
             }
         });
         }
     });
 
+    console.log("GraphData2", graphData)
+
     return graphData;
+    }
+
+    function calcParents(node) {
+        console.log("NODE-Parents", node, "\n", node.parents)
+        let parents = node.parents
+        for (parent in parents) {
+            let par = parents[parent]
+            console.log("parent", par.x, par.y)
+        }
     }
   
     // Parse graph data and apply layout
@@ -124,9 +141,12 @@
 
       cx={node.x}
       cy={node.y}
-      r="10"
+      r="15"
       fill="blue"
     />
+    <text x={node.x} y={node.y} fill='white'>
+        {node.id}
+    </text>
   {/each}
 </svg>
 
