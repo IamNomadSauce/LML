@@ -16,7 +16,7 @@ type Neuron struct {
 }
 
 func NewNeuron(nInputs int, inputs []float64) *Neuron {
-	fmt.Println("New Neuron", nInputs, "inputs\n")
+	// fmt.Println("New Neuron", nInputs, "inputs\n")
 	rand.Seed(time.Now().UnixNano())
 
 	weights := make([]float64, nInputs)
@@ -63,31 +63,60 @@ type Layer struct {
 }
 
 func NewLayer(nIn, nOut int, inputs []float64) *Layer {
+	fmt.Println("New Layyer!", nIn, nOut)
 
 	neurons := make([]float64, nOut)
 	for i := range neurons {
 		neurons[i] = NewNeuron(nIn, inputs).Output
 	}
-	fmt.Println("New Layer\n", neurons)
+	// fmt.Println("New Layer\n", len(neurons))
 
-	for i := range neurons {
-		fmt.Println("Output", i, neurons[i])
-	}
+	// for i := range neurons {
+	// 	fmt.Println("Output", i, neurons[i])
+	// }
 	return &Layer{in: nIn, out: nOut, output: neurons}
 }
 
-// func NewLayer(nIn, nOut int) {
-// 	neurons := NewNeuron(2)
-// 	fmt.Println(neurons)
-// }
+type MLP struct {
+	nIn    int
+	nOuts  int
+	Layers []Layer
+}
+
+func NewMLP(nIn int, layers []int, inputs []float64) float64 {
+
+	sz := append([]int{nIn}, layers...)
+	fmt.Println("NewMLP", sz)
+	nInputs := inputs
+	for i := 0; i < len(sz)-1; i++ {
+		layer := NewLayer(sz[i], sz[i+1], nInputs)
+		nInputs = layer.output
+		fmt.Println("Layer", layer.in, layer.out, layer.output)
+	}
+	// for i := range layers {
+	// 	fmt.Println("Layer", layers[i], nIn)
+
+	// 	output := NewLayer(layers[i], layers[i+1], inputs)
+	// 	fmt.Println("Output", output)
+	// }
+	return 0.0
+}
+
 func main() {
 
 	inputs := []float64{
 		2.0,
 		3.0,
-		// 2.1,
+		-1.0,
 	}
 
-	layer := NewLayer(len(inputs), 3, inputs)
-	fmt.Println("Layer:", layer)
+	// layer := NewLayer(len(inputs), 3, inputs)
+	// fmt.Println("Layer:", layer)
+	layers := []int{
+		4,
+		4,
+		1,
+	}
+	mlp := NewMLP(3, layers, inputs)
+	fmt.Println("MLP", mlp)
 }
