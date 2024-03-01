@@ -63,7 +63,7 @@ type Layer struct {
 }
 
 func NewLayer(nIn, nOut int, inputs []float64) *Layer {
-	fmt.Println("New Layyer!", nIn, nOut)
+	// fmt.Println("New Layyer!", nIn, nOut)
 
 	neurons := make([]float64, nOut)
 	for i := range neurons {
@@ -78,28 +78,38 @@ func NewLayer(nIn, nOut int, inputs []float64) *Layer {
 }
 
 type MLP struct {
-	nIn    int
+	In     int
 	nOuts  int
 	Layers []Layer
+	Output float64
 }
 
-func NewMLP(nIn int, layers []int, inputs []float64) float64 {
+func NewMLP(nIn int, layers []int, inputs []float64) *MLP {
 
 	sz := append([]int{nIn}, layers...)
 	fmt.Println("NewMLP", sz)
 	nInputs := inputs
+	lyrs := []Layer{}
 	for i := 0; i < len(sz)-1; i++ {
 		layer := NewLayer(sz[i], sz[i+1], nInputs)
+		lyrs = append(lyrs, *layer)
 		nInputs = layer.output
-		fmt.Println("Layer", layer.in, layer.out, layer.output)
+		// fmt.Println("Layer", layer.in, layer.out, layer.output)
 	}
 	// for i := range layers {
+	output := lyrs[len(layers)-1].output[0]
+	// fmt.Println("Output", output)
 	// 	fmt.Println("Layer", layers[i], nIn)
 
 	// 	output := NewLayer(layers[i], layers[i+1], inputs)
 	// 	fmt.Println("Output", output)
 	// }
-	return 0.0
+	return &MLP{
+		In:     nIn,
+		nOuts:  len(nInputs),
+		Layers: lyrs,
+		Output: output,
+	}
 }
 
 func main() {
@@ -118,5 +128,5 @@ func main() {
 		1,
 	}
 	mlp := NewMLP(3, layers, inputs)
-	fmt.Println("MLP", mlp)
+	fmt.Println("MLP", mlp.Output)
 }
