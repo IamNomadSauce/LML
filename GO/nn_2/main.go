@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -10,47 +11,83 @@ import (
 type Neuron struct {
 	InputsN int
 	Weights []float64
-	Biases  []float64
+	Biases  float64
 	Output  float64
 }
 
-func NewNeuron(inputs []float64) *Neuron {
+func NewNeuron(nInputs int, inputs []float64) *Neuron {
+	fmt.Println("New Neuron", nInputs, "inputs\n")
 	rand.Seed(time.Now().UnixNano())
 
-	weights := make([]float64, len(inputs))
+	weights := make([]float64, nInputs)
 
-	biases := make([]float64, len(inputs))
-
+	bias := rand.Float64()*2 - 1
+	out := 0.0
+	sum := 0.0
 	for i := range weights {
-		w := weights[i]
-		b := biases[i]
-		x := inputs[i]
+		weights[i] = rand.Float64()*2 - 1
 
-		w = rand.Float64()*2 - 1
-		b = rand.Float64()*2 - 1
-		fmt.Println("w*x+b: ", (w*x)+b)
+		// sum(w * x) (Dot Product)
+		wxb := weights[i] * inputs[i]
+		sum += wxb
+		// out := (weights[i] * inputs[i]) + biases[i]
+		// fmt.Println("w*x+b: \n", weights, "\n", biases)
 	}
+	// w.x + b
+	out = sum + bias
+	act := TanH(out)
 	neur := &Neuron{
-		InputsN: len(inputs),
+		InputsN: nInputs,
 		Weights: weights,
-		Biases:  biases,
+		Biases:  bias,
+		Output:  act.Output,
 	}
 	return neur
 }
 
-type Layer struct {
-	in  int
-	out int
+type Activation struct {
+	input  float64
+	Output float64
 }
 
+// TanH activation
+func TanH(x float64) *Activation {
+	out := (math.Exp(2*x) - 1) / (math.Exp(2*x) + 1)
+	return &Activation{input: x, Output: out}
+}
+
+type Layer struct {
+	in     int
+	out    int
+	output []float64
+}
+
+func NewLayer(nIn, nOut int, inputs []float64) *Layer {
+
+	neurons := make([]float64, nOut)
+	for i := range neurons {
+		neurons[i] = NewNeuron(nIn, inputs).Output
+	}
+	fmt.Println("New Layer\n", neurons)
+
+	for i := range neurons {
+		fmt.Println("Output", i, neurons[i])
+	}
+	return &Layer{in: nIn, out: nOut, output: neurons}
+}
+
+// func NewLayer(nIn, nOut int) {
+// 	neurons := NewNeuron(2)
+// 	fmt.Println(neurons)
+// }
 func main() {
 
 	inputs := []float64{
 		2.0,
-		4.1,
-		2.1,
+		3.0,
+		// 2.1,
 	}
 
-	neuron := NewNeuron(inputs)
-	fmt.Println(neuron)
+	layer := NewLayer(len(inputs), 3, inputs)
+	fmt.Println("Layer:", layer)
 }
