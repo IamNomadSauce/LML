@@ -52,8 +52,10 @@ func (b *BCEWithLogitsLoss) Forward(output, y_true *tensor.Tensor) (float64, err
 
 // Backward calculates the gradient of the binary cross-entropy loss with logits (backward pass)
 func (b *BCEWithLogitsLoss) Backward(yPred, yTrue *tensor.Tensor) *tensor.Tensor {
+
+	fmt.Println("Loss.Backward\n", yPred.Shape().Data, yTrue.Shape().Data)
 	if yPred.Rows != yTrue.Rows || yPred.Cols != yTrue.Cols {
-		// return nil, fmt.Errorf("predictions and targets have different shapes")
+		fmt.Errorf("predictions and targets have different shapes")
 	}
 
 	gradients := tensor.NewTensor(yPred.Data)

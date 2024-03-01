@@ -188,7 +188,7 @@ type LinearLayer struct {
 
 // NewLinearLayer creates a new linear layer with given input and output sizes
 func NewLinearLayer(inputDim, outputDim int) *LinearLayer {
-	fmt.Println("NewLinear", inputDim, outputDim)
+	// fmt.Println("NewLinear", inputDim, outputDim)
 	// Initialize weights with Xavier initialization
 	weightsData := XavierInit(outputDim, inputDim)
 	weights := tensor.NewTensor(weightsData)
@@ -206,7 +206,7 @@ func NewLinearLayer(inputDim, outputDim int) *LinearLayer {
 // Forward performs the forward pass
 func (l *LinearLayer) Forward(inputs *tensor.Tensor) *tensor.Tensor {
 	l.Inputs = inputs // Store inputs for use in backward pass
-	fmt.Println("Linear-forward", inputs.Rows, inputs.Cols)
+	// fmt.Println("Linear-forward", inputs.Rows, inputs.Cols)
 	output, err := inputs.MatrixMultiply(l.Weights)
 	if err != nil {
 		fmt.Println("Error during forward pass matrix multiplication:", err)

@@ -23,7 +23,7 @@ func NewTensor(data [][]float64) *Tensor {
 	if rows > 0 {
 		cols = len(data[0]) // Correctly set the number of columns
 	}
-	fmt.Println("NewTensor", rows, cols)
+	// fmt.Println("NewTensor", rows, cols)
 
 	return &Tensor{Data: data, Rows: rows, Cols: cols}
 }
@@ -100,7 +100,7 @@ func Reshape(biases *Tensor, numRows int) *Tensor {
 
 // MatrixMultiply performs matrix multiplication with another tensor and returns a new tensor
 func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
-	fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
+	// fmt.Println("\nTensor-MatMul\n", t.Rows, t.Cols, "\n", other.Rows, other.Cols, "\n")
 
 	if t.Cols != other.Rows {
 
@@ -121,7 +121,7 @@ func (t *Tensor) MatrixMultiply(other *Tensor) (*Tensor, error) {
 		}
 	}
 	rs := NewTensor(resultData)
-	fmt.Println("MatMul Results\n", rs.Shape().Data, "\n")
+	// fmt.Println("MatMul Results\n", rs.Shape().Data, "\n")
 	return rs, nil
 }
 
@@ -178,7 +178,7 @@ func (t *Tensor) Argmax(axis int) *Tensor {
 
 // ElementWiseMultiply performs element-wise multiplication between two tensors
 func ElementWiseMultiply(a, b *Tensor) *Tensor {
-	fmt.Println("ElementMultiply")
+	// fmt.Println("ElementMultiply")
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		panic("tensors have different shapes")
 	}

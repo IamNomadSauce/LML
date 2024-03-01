@@ -77,16 +77,17 @@ func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 		m.Optimizer.ZeroGrad()
 
 		// Forward pass through layers
-		fmt.Println("Do input-forward")
+		// fmt.Println("Do input-forward")
 		m.InputLayer.Forward(X)
-		fmt.Println("Do input-activation-forward")
+		// fmt.Println("Do input-activation-forward")
 		m.InputActivation.Forward(m.InputLayer.Outputs, true)
 
 		// Apply dropout after the activation
-		fmt.Println("Do Dropout-forward")
+		// fmt.Println("Do Dropout-forward")
 		m.Dropout.Forward(m.InputActivation.Output, true)
 		output := m.OutputLayer.Forward(m.Dropout.Output) // Use the output from dropout layer
-		fmt.Println("Compute Loss")
+
+		// fmt.Println("Predictions", output.Data)
 
 		// Compute loss
 		loss, err := m.Loss.Forward(output, y)
@@ -94,30 +95,42 @@ func (m *Model) Train(X, y, X_test, y_test *tensor.Tensor, epochs int) {
 			fmt.Println("Error computing loss:", err)
 			return
 		}
+		fmt.Println("Compute Loss", loss)
 
-		fmt.Println()
-		// Compute gradients
+		// Backward Pass
 		dLoss := m.Loss.Backward(output, y)
+		dOutput := m.OutputLayer.Backward(dLoss)
+		dDropout := m.Dropout.Backward(dOutput)
+		dInputActivation := m.InputActivation.Backward(dDropout)
+		m.InputLayer.Backward(dInputActivation)
 
-		// Backpropagate through the output layer to compute gradients for weights and biases
-		dOutput := m.OutputLayer.Backward(dLoss) // Backpropagate through the output layer
+		m.Optimizer.Step(m)
 
-		// Backpropagate through dropout
-		dDropout := m.Dropout.Backward(dOutput) // Backpropagate through the dropout layer
+		m.LossValues[epoch-1] = loss
 
-		// Backpropagate through the input activation layer
-		dInputActivation := m.InputActivation.Backward(dDropout) // Backpropagate through the input activation layer
+		// fmt.Println()
+		// // Compute gradients
+		// dLoss := m.Loss.Backward(output, y)
 
-		// Backpropagate through the input layer to compute gradients for weights and biases
-		m.InputLayer.Backward(dInputActivation) // Backpropagate through the input layer
+		// // Backpropagate through the output layer to compute gradients for weights and biases
+		// dOutput := m.OutputLayer.Backward(dLoss) // Backpropagate through the output layer
 
-		// Update weights and biases using the optimizer
-		m.Optimizer.Step(m) // Perform the optimization step to update all weights and biases
+		// // Backpropagate through dropout
+		// dDropout := m.Dropout.Backward(dOutput) // Backpropagate through the dropout layer
 
-		m.LossValues[epoch-1] = loss // Store the loss value for this epoch
+		// // Backpropagate through the input activation layer
+		// dInputActivation := m.InputActivation.Backward(dDropout) // Backpropagate through the input activation layer
 
-		if epoch%100 == 0 {
-			fmt.Printf("Epoch %d: Training... Loss: %f\n", epoch, loss)
-		}
+		// // Backpropagate through the input layer to compute gradients for weights and biases
+		// m.InputLayer.Backward(dInputActivation) // Backpropagate through the input layer
+
+		// // Update weights and biases using the optimizer
+		// m.Optimizer.Step(m) // Perform the optimization step to update all weights and biases
+
+		// m.LossValues[epoch-1] = loss // Store the loss value for this epoch
+
+		// if epoch%100 == 0 {
+		// 	fmt.Printf("Epoch %d: Training... Loss: %f\n", epoch, loss)
+		// }
 	}
 }

@@ -56,7 +56,7 @@ func NewLayerInput() *LayerInput {
 	return &LayerInput{}
 }
 func New_Dense_Layer(nInputs, nOutputs int64) LayerDense {
-	fmt.Println("New Dense Layer", nInputs, nOutputs)
+	// fmt.Println("New Dense Layer", nInputs, nOutputs)
 
 	rand.Seed(time.Now().UnixNano())
 	// weights := [][]float64{

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go_nn/dl"
 	_ "go_nn/dl"
 	"go_nn/nn"
@@ -9,12 +8,6 @@ import (
 	"go_nn/tensor"
 	"math/rand"
 	"time"
-
-	"log"
-
-	"gonum.org/v1/plot"
-	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/vg"
 )
 
 func main() {
@@ -26,37 +19,36 @@ func main() {
 	// fmt.Println(X_tensor.Data, y_tensor.Data, X_test_tensor.Data, y_test_tensor.Data)
 
 	model := nn.NewModel(2, 10, 1, 5e-10)
-	fmt.Println("OutputsN:", model.InputLayer.Outputs)
 
-	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 10001)
+	model.Train(X_tensor, y_tensor, X_test_tensor, y_test_tensor, 100)
 
-	// Create a new plot
-	p := plot.New()
-	// if err != nil {
-	// 	log.Fatalf("Could not create plot: %v", err)
+	// // Create a new plot
+	// p := plot.New()
+	// // if err != nil {
+	// // 	log.Fatalf("Could not create plot: %v", err)
+	// // }
+
+	// p.Title.Text = "Training Loss Over Time"
+	// p.X.Label.Text = "Epoch"
+	// p.Y.Label.Text = "Loss"
+
+	// // Create a line plotter with data
+	// pts := make(plotter.XYs, len(model.LossValues))
+	// for i := range pts {
+	// 	pts[i].X = float64(i + 1) // Epochs start at 1
+	// 	pts[i].Y = model.LossValues[i]
 	// }
 
-	p.Title.Text = "Training Loss Over Time"
-	p.X.Label.Text = "Epoch"
-	p.Y.Label.Text = "Loss"
+	// line, err := plotter.NewLine(pts)
+	// if err != nil {
+	// 	log.Fatalf("Could not create line plotter: %v", err)
+	// }
+	// p.Add(line)
 
-	// Create a line plotter with data
-	pts := make(plotter.XYs, len(model.LossValues))
-	for i := range pts {
-		pts[i].X = float64(i + 1) // Epochs start at 1
-		pts[i].Y = model.LossValues[i]
-	}
-
-	line, err := plotter.NewLine(pts)
-	if err != nil {
-		log.Fatalf("Could not create line plotter: %v", err)
-	}
-	p.Add(line)
-
-	// Save the plot to a PNG file
-	if err := p.Save(4*vg.Inch, 4*vg.Inch, "loss_plot.png"); err != nil {
-		log.Fatalf("Could not save plot: %v", err)
-	}
+	// // Save the plot to a PNG file
+	// if err := p.Save(4*vg.Inch, 4*vg.Inch, "loss_plot.png"); err != nil {
+	// 	log.Fatalf("Could not save plot: %v", err)
+	// }
 
 }
 
