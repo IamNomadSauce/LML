@@ -12,6 +12,7 @@ type Neuron struct {
 	InputsN int
 	Weights []float64
 	Biases  float64
+	DotP    float64 // w * x + b
 	Output  float64
 }
 
@@ -40,6 +41,7 @@ func NewNeuron(nInputs int, inputs []float64) *Neuron {
 		InputsN: nInputs,
 		Weights: weights,
 		Biases:  bias,
+		DotP:    out,
 		Output:  act.Output,
 	}
 	return neur
@@ -57,24 +59,37 @@ func TanH(x float64) *Activation {
 }
 
 type Layer struct {
-	in     int
-	out    int
-	output []float64
+	in      int
+	out     int
+	Neurons []Neuron
+	output  []float64
 }
 
 func NewLayer(nIn, nOut int, inputs []float64) *Layer {
 	// fmt.Println("New Layyer!", nIn, nOut)
 
+	neur := make([]Neuron, nOut)
 	neurons := make([]float64, nOut)
 	for i := range neurons {
 		neurons[i] = NewNeuron(nIn, inputs).Output
+		neur[i] = *NewNeuron(nIn, inputs)
 	}
 	// fmt.Println("New Layer\n", len(neurons))
 
 	// for i := range neurons {
 	// 	fmt.Println("Output", i, neurons[i])
 	// }
-	return &Layer{in: nIn, out: nOut, output: neurons}
+	return &Layer{in: nIn, out: nOut, Neurons: neur, output: neurons}
+}
+
+func (l *Layer) Parameters() []float64 {
+	params := []float64{}
+	for _, neuron := range l.Neurons {
+		fmt.Println("Parameters:Neurons", neuron)
+		// params = append(params, neuron.DotP)
+		params = append(params, neuron.DotP)
+	}
+	return params
 }
 
 type MLP struct {
@@ -112,13 +127,21 @@ func NewMLP(nIn int, layers []int, inputs []float64) *MLP {
 	}
 }
 
+func (m *MLP) Parameters() []float64 {
+	var params []float64
+	for _, layer := range m.Layers {
+		params = append(params, layer.Parameters()...)
+	}
+	return params
+}
+
 func main() {
 
-	inputs := []float64{
-		2.0,
-		3.0,
-		-1.0,
-	}
+	// inputs := []float64{
+	// 	2.0,
+	// 	3.0,
+	// 	-1.0,
+	// }
 
 	// layer := NewLayer(len(inputs), 3, inputs)
 	// fmt.Println("Layer:", layer)
@@ -127,6 +150,19 @@ func main() {
 		4,
 		1,
 	}
-	mlp := NewMLP(3, layers, inputs)
-	fmt.Println("MLP", mlp.Output)
+	xs := [][]float64{
+		{2.0, 3.0, -1.0},
+		{3.0, -1.0, 0.5},
+		{0.5, 1.0, 1.0},
+		{1.0, 1.0, -1.0},
+	}
+
+	for i := range xs {
+		fmt.Println(i)
+		mlp := NewMLP(len(xs[0]), layers, xs[i])
+		fmt.Println("MLP", mlp.Output)
+		params := mlp.Parameters()
+		fmt.Println("Parameters", params)
+	}
+
 }
